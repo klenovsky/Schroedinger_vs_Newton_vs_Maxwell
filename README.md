@@ -53,3 +53,9 @@ streamlit run app.py
 ## Česká poznámka
 
 Aplikace je připravena přímo pro GitHub a následné nasazení do Streamlit Community Cloud. Výchozí jazyk je angličtina, ale v levém panelu lze přepnout do češtiny.
+
+
+## Update in this version
+
+- real interactive Plotly animations with Play/Pause controls inside the app
+- GIF export kept as an optional fallback/download

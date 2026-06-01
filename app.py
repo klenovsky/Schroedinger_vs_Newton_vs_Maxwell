@@ -13,6 +13,7 @@ from scipy.linalg import eigh_tridiagonal
 
 try:
     import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
     HAS_PLOTLY = True
 except Exception:
     HAS_PLOTLY = False
@@ -181,6 +182,8 @@ $$
         "left_right": "Left / right population",
         "expander_numerics": "Numerical implementation",
         "numerics_text": "The Hamiltonians are tridiagonal and diagonalized with `scipy.linalg.eigh_tridiagonal`; time evolution is evaluated in a vectorized basis-expansion form `basis @ phases`.",
+        "play_note": "Use the Play button below the plot to start the evolution.",
+        "gif_note": "Optional: you can also export the same evolution as a GIF.",
     },
     "Czech": {
         "app_title": "Kvantová, klasická a optická dynamika v jamách",
@@ -295,6 +298,8 @@ $$
         "left_right": "Levá / pravá populace",
         "expander_numerics": "Numerická implementace",
         "numerics_text": "Hamiltoniány jsou tridiagonální a diagonalizují se pomocí `scipy.linalg.eigh_tridiagonal`; časový vývoj je vyhodnocen vektorizovaně ve tvaru `basis @ phases`.",
+        "play_note": "Pro spuštění vývoje použij tlačítko Play pod grafem.",
+        "gif_note": "Volitelně lze stejný vývoj exportovat i jako GIF.",
     },
 }
 
@@ -787,6 +792,194 @@ def make_surface(x: np.ndarray, y: np.ndarray, Z: np.ndarray, title: str, y_labe
     return fig
 
 
+def _animation_controls(frame_duration_ms: int = 80):
+    return [
+        {
+            "type": "buttons",
+            "showactive": False,
+            "x": 0.02,
+            "y": 1.15,
+            "direction": "left",
+            "buttons": [
+                {
+                    "label": "Play",
+                    "method": "animate",
+                    "args": [None, {"frame": {"duration": frame_duration_ms, "redraw": True}, "fromcurrent": True, "transition": {"duration": 0}}],
+                },
+                {
+                    "label": "Pause",
+                    "method": "animate",
+                    "args": [[None], {"frame": {"duration": 0, "redraw": False}, "mode": "immediate", "transition": {"duration": 0}}],
+                },
+            ],
+        }
+    ]
+
+
+def _animation_slider(steps):
+    return [{
+        "currentvalue": {"prefix": "frame: "},
+        "pad": {"t": 40},
+        "steps": steps,
+    }]
+
+
+def make_single_animation(sim, lang: str):
+    if not HAS_PLOTLY:
+        return None
+    x = sim["x"]
+    dens = sim["dens"]
+    x_mean = sim["x_mean"]
+    x_class = sim["x_class"]
+    times = sim["times"]
+    step = max(1, len(times) // 80)
+    idxs = np.arange(0, len(times), step, dtype=int)
+    ymax = float(1.05 * np.max(dens))
+    ymin_h = float(min(np.min(x_mean), np.min(x_class)) - 0.05)
+    ymax_h = float(max(np.max(x_mean), np.max(x_class)) + 0.05)
+
+    fig = make_subplots(rows=1, cols=2, subplot_titles=(tr(lang, "single_snapshot_title"), tr(lang, "single_history_title")))
+    fig.add_trace(go.Scatter(x=x, y=dens[:, idxs[0]], mode="lines", name=tr(lang, "quantum_density"), line=dict(width=3)), row=1, col=1)
+    fig.add_trace(go.Scatter(x=[x_mean[idxs[0]], x_mean[idxs[0]]], y=[0, ymax], mode="lines", name=tr(lang, "mean_position"), line=dict(dash="dash")), row=1, col=1)
+    fig.add_trace(go.Scatter(x=[x_class[idxs[0]]], y=[0.08 * ymax], mode="markers", name=tr(lang, "classical_particle"), marker=dict(size=10)), row=1, col=1)
+
+    fig.add_trace(go.Scatter(x=times, y=x_mean, mode="lines", name=tr(lang, "mean_position"), line=dict(width=3), showlegend=False), row=1, col=2)
+    fig.add_trace(go.Scatter(x=times, y=x_class, mode="lines", name=tr(lang, "classical_particle"), line=dict(dash="dash", width=3), showlegend=False), row=1, col=2)
+    fig.add_trace(go.Scatter(x=[times[idxs[0]]], y=[x_mean[idxs[0]]], mode="markers", name="current quantum", marker=dict(size=10), showlegend=False), row=1, col=2)
+    fig.add_trace(go.Scatter(x=[times[idxs[0]]], y=[x_class[idxs[0]]], mode="markers", name="current classical", marker=dict(size=10, symbol="diamond"), showlegend=False), row=1, col=2)
+
+    frames = []
+    slider_steps = []
+    for i in idxs:
+        frames.append(go.Frame(
+            name=str(i),
+            data=[
+                go.Scatter(x=x, y=dens[:, i]),
+                go.Scatter(x=[x_mean[i], x_mean[i]], y=[0, ymax]),
+                go.Scatter(x=[x_class[i]], y=[0.08 * ymax]),
+                go.Scatter(x=times, y=x_mean),
+                go.Scatter(x=times, y=x_class),
+                go.Scatter(x=[times[i]], y=[x_mean[i]]),
+                go.Scatter(x=[times[i]], y=[x_class[i]]),
+            ],
+            traces=[0, 1, 2, 3, 4, 5, 6],
+            layout=go.Layout(title_text=f"{tr(lang, 'video_section_single')} — t = {times[i]:.4f}"),
+        ))
+        slider_steps.append({
+            "label": f"{times[i]:.3f}",
+            "method": "animate",
+            "args": [[str(i)], {"frame": {"duration": 0, "redraw": True}, "mode": "immediate", "transition": {"duration": 0}}],
+        })
+
+    fig.frames = frames
+    fig.update_xaxes(title_text="x", row=1, col=1)
+    fig.update_yaxes(title_text="density" if lang == "English" else "hustota", range=[0, ymax], row=1, col=1)
+    fig.update_xaxes(title_text="time t" if lang == "English" else "čas t", row=1, col=2)
+    fig.update_yaxes(title_text="position" if lang == "English" else "poloha", range=[ymin_h, ymax_h], row=1, col=2)
+    fig.update_layout(height=500, title_text=f"{tr(lang, 'video_section_single')} — t = {times[idxs[0]]:.4f}", updatemenus=_animation_controls(), sliders=_animation_slider(slider_steps))
+    return fig
+
+
+def make_double_animation(dw, opt, lang: str):
+    if not HAS_PLOTLY:
+        return None
+    q_step = max(1, len(dw["times"]) // 80)
+    q_idx = np.arange(0, len(dw["times"]), q_step, dtype=int)
+    o_idx = np.linspace(0, len(opt["z_vals"]) - 1, len(q_idx)).astype(int)
+
+    qmax = float(1.05 * np.max(dw["dens"]))
+    omax = float(1.05 * np.max(opt["I_opt"]))
+    barrier_edge = dw["center"] - dw["barrier_width"] / 2.0
+
+    fig = make_subplots(rows=1, cols=3, subplot_titles=(tr(lang, "classical"), tr(lang, "quantum"), tr(lang, "optical_label")))
+    fig.add_trace(go.Scatter(x=[dw["x_class"][q_idx[0]]], y=[0.45], mode="markers", name=tr(lang, "classical_particle"), marker=dict(size=12)), row=1, col=1)
+    fig.add_trace(go.Scatter(x=dw["x"], y=dw["dens"][:, q_idx[0]], mode="lines", name=tr(lang, "quantum_density"), line=dict(width=3)), row=1, col=2)
+    fig.add_trace(go.Scatter(x=dw["x"], y=(dw["V"] / max(np.max(dw["V"]), 1e-9)) * (0.8 * qmax), mode="lines", name="barrier", line=dict(dash="dash")), row=1, col=2)
+    fig.add_trace(go.Scatter(x=[dw["x_mean"][q_idx[0]], dw["x_mean"][q_idx[0]]], y=[0, qmax], mode="lines", name=tr(lang, "mean_position"), line=dict(dash="dot")), row=1, col=2)
+    fig.add_trace(go.Scatter(x=opt["x"], y=opt["I_opt"][:, o_idx[0]], mode="lines", name=tr(lang, "optical_intensity"), line=dict(width=3)), row=1, col=3)
+    fig.add_trace(go.Scatter(x=opt["x"], y=120 * (opt["n_profile"] - opt["n_clad"]), mode="lines", name="index", line=dict(dash="dash")), row=1, col=3)
+    fig.add_trace(go.Scatter(x=[opt["x_mean"][o_idx[0]], opt["x_mean"][o_idx[0]]], y=[0, omax], mode="lines", name=tr(lang, "mean_position"), line=dict(dash="dot")), row=1, col=3)
+
+    frames = []
+    slider_steps = []
+    for iq, io in zip(q_idx, o_idx):
+        frames.append(go.Frame(
+            name=str(iq),
+            data=[
+                go.Scatter(x=[dw["x_class"][iq]], y=[0.45]),
+                go.Scatter(x=dw["x"], y=dw["dens"][:, iq]),
+                go.Scatter(x=dw["x"], y=(dw["V"] / max(np.max(dw["V"]), 1e-9)) * (0.8 * qmax)),
+                go.Scatter(x=[dw["x_mean"][iq], dw["x_mean"][iq]], y=[0, qmax]),
+                go.Scatter(x=opt["x"], y=opt["I_opt"][:, io]),
+                go.Scatter(x=opt["x"], y=120 * (opt["n_profile"] - opt["n_clad"])),
+                go.Scatter(x=[opt["x_mean"][io], opt["x_mean"][io]], y=[0, omax]),
+            ],
+            traces=[0, 1, 2, 3, 4, 5, 6],
+            layout=go.Layout(title_text=f"{tr(lang, 'video_section_double')} — t/T = {dw['times'][iq] / dw['T_tunnel']:.2f}, z/Lc = {opt['z_vals'][io] / opt['L_couple']:.2f}"),
+        ))
+        slider_steps.append({
+            "label": f"{dw['times'][iq] / dw['T_tunnel']:.2f}",
+            "method": "animate",
+            "args": [[str(iq)], {"frame": {"duration": 0, "redraw": True}, "mode": "immediate", "transition": {"duration": 0}}],
+        })
+
+    fig.frames = frames
+    fig.add_vline(x=0.0, line_width=1.5, line_color="black", row=1, col=1)
+    fig.add_vline(x=barrier_edge, line_width=1.5, line_color="black", row=1, col=1)
+    fig.update_xaxes(title_text="x", row=1, col=1)
+    fig.update_yaxes(visible=False, range=[-0.05, 1.0], row=1, col=1)
+    fig.update_xaxes(title_text="x", row=1, col=2)
+    fig.update_yaxes(title_text="density" if lang == "English" else "hustota", range=[0, qmax], row=1, col=2)
+    fig.update_xaxes(title_text="x", row=1, col=3)
+    fig.update_yaxes(title_text="intensity" if lang == "English" else "intenzita", range=[0, omax], row=1, col=3)
+    fig.update_layout(height=460, title_text=f"{tr(lang, 'video_section_double')} — t/T = {dw['times'][q_idx[0]] / dw['T_tunnel']:.2f}, z/Lc = {opt['z_vals'][o_idx[0]] / opt['L_couple']:.2f}", updatemenus=_animation_controls(), sliders=_animation_slider(slider_steps), showlegend=False)
+    return fig
+
+
+def make_optical_animation(opt, lang: str):
+    if not HAS_PLOTLY:
+        return None
+    idxs = np.arange(0, len(opt["z_vals"]), max(1, len(opt["z_vals"]) // 80), dtype=int)
+    omax = float(1.05 * np.max(opt["I_opt"]))
+    z_norm = opt["z_vals"] / opt["L_couple"]
+
+    fig = make_subplots(rows=1, cols=2, subplot_titles=(tr(lang, "optical_intensity"), tr(lang, "optical_snapshot_title")))
+    fig.add_trace(go.Scatter(x=opt["x"], y=opt["I_opt"][:, idxs[0]], mode="lines", name=tr(lang, "optical_intensity"), line=dict(width=3)), row=1, col=1)
+    fig.add_trace(go.Scatter(x=opt["x"], y=120 * (opt["n_profile"] - opt["n_clad"]), mode="lines", name="index", line=dict(dash="dash")), row=1, col=1)
+    fig.add_trace(go.Scatter(x=[opt["x_mean"][idxs[0]], opt["x_mean"][idxs[0]]], y=[0, omax], mode="lines", name=tr(lang, "mean_position"), line=dict(dash="dot")), row=1, col=1)
+    fig.add_trace(go.Heatmap(z=opt["I_opt"], x=z_norm, y=opt["x"], colorscale="Viridis", showscale=True, colorbar=dict(title="I")), row=1, col=2)
+    fig.add_trace(go.Scatter(x=[z_norm[idxs[0]], z_norm[idxs[0]]], y=[opt["x"][0], opt["x"][-1]], mode="lines", name="cursor", line=dict(color="white", dash="dot")), row=1, col=2)
+
+    frames = []
+    slider_steps = []
+    for i in idxs:
+        frames.append(go.Frame(
+            name=str(i),
+            data=[
+                go.Scatter(x=opt["x"], y=opt["I_opt"][:, i]),
+                go.Scatter(x=opt["x"], y=120 * (opt["n_profile"] - opt["n_clad"])),
+                go.Scatter(x=[opt["x_mean"][i], opt["x_mean"][i]], y=[0, omax]),
+                go.Heatmap(z=opt["I_opt"], x=z_norm, y=opt["x"], colorscale="Viridis", showscale=True, colorbar=dict(title="I")),
+                go.Scatter(x=[z_norm[i], z_norm[i]], y=[opt["x"][0], opt["x"][-1]]),
+            ],
+            traces=[0, 1, 2, 3, 4],
+            layout=go.Layout(title_text=f"{tr(lang, 'video_section_optical')} — z/Lc = {z_norm[i]:.2f}"),
+        ))
+        slider_steps.append({
+            "label": f"{z_norm[i]:.2f}",
+            "method": "animate",
+            "args": [[str(i)], {"frame": {"duration": 0, "redraw": True}, "mode": "immediate", "transition": {"duration": 0}}],
+        })
+
+    fig.frames = frames
+    fig.update_xaxes(title_text="x", row=1, col=1)
+    fig.update_yaxes(title_text="intensity" if lang == "English" else "intenzita", range=[0, omax], row=1, col=1)
+    fig.update_xaxes(title_text=r"z / L$_c$", row=1, col=2)
+    fig.update_yaxes(title_text="x", row=1, col=2)
+    fig.update_layout(height=500, title_text=f"{tr(lang, 'video_section_optical')} — z/Lc = {z_norm[idxs[0]]:.2f}", updatemenus=_animation_controls(), sliders=_animation_slider(slider_steps), showlegend=False)
+    return fig
+
+
 # ============================================================
 # GIF generation
 # ============================================================
@@ -989,10 +1182,16 @@ elif section == tr(lang, "single"):
         st.info(tr(lang, "revival_note"))
     with tabs[2]:
         st.markdown(f"**{tr(lang, 'video_section_single')}**")
-        st.caption(tr(lang, "video_help"))
+        st.caption(tr(lang, "play_note"))
+        anim_fig = make_single_animation(sim, lang)
+        if anim_fig is not None:
+            st.plotly_chart(anim_fig, use_container_width=True)
+        else:
+            st.info(tr(lang, "no_plotly"))
+        st.caption(tr(lang, "gif_note"))
         if st.button(tr(lang, "generate_video"), key="single_gif"):
             gif = make_single_gif(sim["x"], sim["dens"], sim["x_mean"], sim["x_class"], sim["times"], lang)
-            st.image(gif)
+            st.markdown(f'<img src="data:image/gif;base64,{__import__("base64").b64encode(gif).decode()}" width="100%" />', unsafe_allow_html=True)
             st.download_button(tr(lang, "download_video"), gif, file_name="single_well_wavepacket.gif", mime="image/gif")
     with tabs[3]:
         fig3d = make_surface(sim["x"], sim["times"], sim["dens"], tr(lang, "surface_single"), "t", r"|psi|^2")
@@ -1035,10 +1234,16 @@ elif section == tr(lang, "double"):
         st.pyplot(plot_double_snapshot(dw, opt, idx_q, idx_o, lang), use_container_width=True)
     with tabs[2]:
         st.markdown(f"**{tr(lang, 'video_section_double')}**")
-        st.caption(tr(lang, "video_help"))
+        st.caption(tr(lang, "play_note"))
+        anim_fig = make_double_animation(dw, opt, lang)
+        if anim_fig is not None:
+            st.plotly_chart(anim_fig, use_container_width=True)
+        else:
+            st.info(tr(lang, "no_plotly"))
+        st.caption(tr(lang, "gif_note"))
         if st.button(tr(lang, "generate_video"), key="double_gif"):
             gif = make_double_compare_gif(dw, opt, lang)
-            st.image(gif)
+            st.markdown(f'<img src="data:image/gif;base64,{__import__("base64").b64encode(gif).decode()}" width="100%" />', unsafe_allow_html=True)
             st.download_button(tr(lang, "download_video"), gif, file_name="double_well_compare.gif", mime="image/gif")
     with tabs[3]:
         colA, colB = st.columns(2)
@@ -1082,10 +1287,16 @@ elif section == tr(lang, "optical"):
         st.info(tr(lang, "optical_note"))
     with tabs[1]:
         st.markdown(f"**{tr(lang, 'video_section_optical')}**")
-        st.caption(tr(lang, "video_help"))
+        st.caption(tr(lang, "play_note"))
+        anim_fig = make_optical_animation(opt, lang)
+        if anim_fig is not None:
+            st.plotly_chart(anim_fig, use_container_width=True)
+        else:
+            st.info(tr(lang, "no_plotly"))
+        st.caption(tr(lang, "gif_note"))
         if st.button(tr(lang, "generate_video"), key="opt_gif"):
             gif = make_optical_gif(opt, lang)
-            st.image(gif)
+            st.markdown(f'<img src="data:image/gif;base64,{__import__("base64").b64encode(gif).decode()}" width="100%" />', unsafe_allow_html=True)
             st.download_button(tr(lang, "download_video"), gif, file_name="optical_propagation.gif", mime="image/gif")
     with tabs[2]:
         fig3d = make_surface(opt["x"], opt["z_vals"] / opt["L_couple"], opt["I_opt"], tr(lang, "surface_optical"), "z/Lc", "I")
