@@ -1,41 +1,55 @@
-# Kvantová a klasická částice v jámě — Streamlit app
+# Quantum wells, tunnelling, and optical analogy — Streamlit app
 
-Jednoduchá výuková Streamlit aplikace pro studenty fyziky:
+A bilingual Streamlit teaching app for introductory university physics.
 
-- nekonečně hluboká 1D kvantová jáma,
-- časový vývoj vlnového balíku a srovnání s klasickou částicí,
-- dvojitá kvantová jáma a tunelování,
-- optická analogie se dvěma vlnovody,
-- konečně hluboká kvantová jáma,
-- vybrané 3D pohledy.
+Default language: **English**  
+Alternative language: **Czech**
 
-## Lokální spuštění
+## Included topics
+
+- single infinite quantum well,
+- time evolution of a quantum wave packet and comparison with a classical particle,
+- double well and tunnelling,
+- optical analogy with two coupled waveguides,
+- finite well with evanescent tails,
+- optional animated GIFs for the dynamical sections,
+- optional 3D surfaces for the `x-t` and `x-z` evolution.
+
+## Repository structure
+
+```text
+.
+├── app.py
+├── requirements.txt
+├── README.md
+├── .gitignore
+└── .streamlit/
+    └── config.toml
+```
+
+## Local run
 
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-## Struktura repozitáře
+## Deploy on Streamlit Community Cloud
 
-```text
-.
-├── app.py
-├── requirements.txt
-├── .gitignore
-└── README.md
-```
+1. Create a new GitHub repository.
+2. Upload all files from this folder.
+3. Open Streamlit Community Cloud.
+4. Select the repository.
+5. Set **Main file path** to `app.py`.
+6. Deploy.
 
-## Nasazení na Streamlit Community Cloud
+## Notes
 
-1. Nahraj tento obsah do nového GitHub repozitáře.
-2. Na Streamlit Community Cloud zvol **New app**.
-3. Vyber svůj GitHub repozitář.
-4. Jako **Main file path** nastav `app.py`.
-5. Potvrď nasazení.
+- The app is written so that it can be uploaded to GitHub directly.
+- Numerics are cached and vectorized where possible.
+- Tridiagonal Hamiltonians are diagonalized efficiently with `scipy.linalg.eigh_tridiagonal`.
+- GIF animations are generated on demand and cached by Streamlit.
 
-## Poznámky
+## Česká poznámka
 
-- Závislosti jsou v `requirements.txt`.
-- Není potřeba `packages.txt`, protože aplikace nepoužívá systémové balíčky instalované přes `apt`.
-- Po commitu nových změn do GitHub repozitáře se nasazená aplikace automaticky aktualizuje.
+Aplikace je připravena přímo pro GitHub a následné nasazení do Streamlit Community Cloud. Výchozí jazyk je angličtina, ale v levém panelu lze přepnout do češtiny.
