@@ -85,50 +85,94 @@ TXT: Dict[str, Dict[str, str]] = {
         "hook_text": "• Why quantum states in a well are discrete.  • Why a wave packet does not behave like a point particle.  • How a barrier controls tunnelling.  • Why light in coupled waveguides can mimic quantum dynamics.",
         "open_theory": "Open short theory and references",
         "how_to_title": "How to use the app",
-        "how_to_text": "1. Choose one simulation in the sidebar. 2. Adjust only a few sliders first. 3. Start with Static plots to understand the stationary states. 4. Then use Snapshot for one chosen time or propagation distance. 5. Finally press Play in Animation to see the full evolution. 6. If the motion is too fast, increase Animation speed (ms per frame).",
+        "how_to_text": "1. Choose one simulation in the sidebar. 2. Start with only a few slider changes. 3. Open the help menu above each panel before changing parameters. 4. Use Static plots to understand stationary states and energy scales. 5. Then use Snapshot for one selected time or propagation distance. 6. Finally press Play in Animation to see the full evolution. 7. If the motion is too fast, increase Animation speed (ms per frame).",
         "theory_title": "Short theory overview",
         "theory_text": r"""
-This app uses intentionally simple one-dimensional models, but the central ideas are the same as in many real quantum and optical systems.
+This app uses intentionally simple one-dimensional models. The goal is not realism in every detail, but a clear visual link between three viewpoints: a classical particle, a quantum wave function, and an optical analogue.
 
-Stationary Schrödinger equation:
+**1. Stationary states in a well**
+
+The stationary Schrödinger equation is
 $$
 \hat H \psi_n(x)=E_n\psi_n(x),
 \qquad
 \hat H=-\frac{1}{2}\frac{d^2}{dx^2}+V(x).
 $$
-The eigenfunctions $\psi_n$ describe the allowed stationary states and the eigenvalues $E_n$ their energies.
+The functions $\psi_n(x)$ are the allowed stationary states and the numbers $E_n$ are their energies. In a confining well only certain shapes fit the boundary conditions, so the spectrum becomes discrete.
 
-Time-dependent quantum evolution:
+**2. Time evolution and wave packets**
+
+A localized particle-like state is described by a superposition
 $$
 \psi(x,t)=\sum_n c_n\,\psi_n(x)\,e^{-iE_n t}.
 $$
-A localized wave packet is therefore a superposition of many stationary states. Because their phases evolve differently, the packet can move, spread, interfere, and later partially revive.
+Because different stationary components pick up different phases, the packet can move, spread, interfere, and later partly reconstruct itself. The probability density is
+$$
+\rho(x,t)=|\psi(x,t)|^2,
+$$
+and the mean position is
+$$
+\langle x \rangle (t)=\int x\,|\psi(x,t)|^2\,dx.
+$$
 
-Classically, a particle is treated as a point moving between walls and reflecting elastically. This makes it easy to compare particle-like intuition with the genuine wave behaviour of quantum mechanics.
+**3. Classical comparison**
 
-For the optical analogue we use the paraxial envelope equation:
+In the classical picture the particle is a point moving with a definite position and momentum. In an ideal well it reflects elastically from the walls. This gives a simple reference picture, but it cannot reproduce interference, tunnelling, or revival.
+
+**4. Double well and tunnelling**
+
+When two wells are separated by a barrier, the two lowest stationary states are usually close in energy. Their splitting controls the slow oscillation between left and right:
+$$
+T_{\mathrm{tunnel}}\approx \frac{\pi}{E_1-E_0}.
+$$
+A higher or wider barrier usually reduces $E_1-E_0$, so the transfer becomes slower.
+
+**5. Finite well**
+
+A finite well differs from an infinite well in two important ways: only a finite number of bound states exists, and the bound-state wave functions penetrate slightly into the barrier region. These exponentially decaying tails are a direct signature of wave behaviour.
+
+**6. Revival of a wave packet**
+
+In an infinite well the energy spectrum scales as $E_n\propto n^2$. Because of this special structure, a dispersed wave packet can later rephase and resemble its initial form again. That is a revival. It is not decoherence: the evolution remains fully coherent.
+
+**7. Optical analogue**
+
+For the optical analogue we use the paraxial envelope equation
 $$
 i\frac{\partial A}{\partial z}
-=-\frac{1}{2k_0n_0}\frac{\partial^2A}{\partial x^2}+V_{\mathrm{opt}}(x)A,
+=-\frac{1}{2k_0n_0}\frac{\partial^2A}{\partial x^2}+V_{\mathrm{opt}}(x)A.
 $$
-where the propagation coordinate $z$ plays a role analogous to time $t$. In coupled waveguides, light can oscillate between two channels in close analogy with quantum tunnelling in a double well.
-
-In a double well or double waveguide, the splitting of the two lowest modes controls the oscillation scale:
+Here the propagation coordinate $z$ plays a role mathematically similar to time $t$. In coupled waveguides, light can oscillate between two channels in close analogy with quantum tunnelling in a double well:
 $$
-T_{\mathrm{tunnel}}\approx \frac{\pi}{E_1-E_0},
-\qquad
 L_c\approx \frac{\pi}{\beta_1-\beta_0}.
 $$
-So a higher and wider barrier usually means weaker coupling and slower transfer between the left and right side.
+So the app lets you compare one mathematical structure in two physical languages.
 """,
         "references": "Selected references",
         "refs_text": """
-- D. J. Griffiths, D. F. Schroeter, *Introduction to Quantum Mechanics*, 3rd ed. (Cambridge University Press, 2018).
-- B. E. A. Saleh, M. C. Teich, *Fundamentals of Photonics*, 3rd ed. (Wiley, 2019).
-- E. Hecht, *Optics*, 5th ed. (Pearson, 2016).
-- D. N. Christodoulides, F. Lederer, Y. Silberberg, *Nature* **424**, 817–823 (2003).
-- R. W. Robinett, *Physics Reports* **392**, 1–119 (2004) — wave-packet revivals.
+- D. J. Griffiths, D. F. Schroeter, *Introduction to Quantum Mechanics*, 3rd ed. (Cambridge University Press, 2018) — basic 1D wells, stationary states, wave packets.
+- R. Shankar, *Principles of Quantum Mechanics*, 2nd ed. (Springer, 1994) — clear operator-based formulation and time evolution.
+- R. W. Robinett, *Quantum wave packet revivals*, *Physics Reports* **392**, 1–119 (2004) — overview of revivals and fractional revivals.
+- B. E. A. Saleh, M. C. Teich, *Fundamentals of Photonics*, 3rd ed. (Wiley, 2019) — paraxial optics and guided-wave propagation.
+- E. Hecht, *Optics*, 5th ed. (Pearson, 2016) — introductory optics background.
+- D. N. Christodoulides, F. Lederer, Y. Silberberg, *Discretizing light behaviour in linear and nonlinear waveguide lattices*, *Nature* **424**, 817–823 (2003) — optical analogue of quantum transport.
+- S. Longhi, *Quantum-optical analogies using photonic structures*, *Laser & Photonics Reviews* **3**, 243–261 (2009) — broader review of optical analogues.
 """,
+        "panel_help": "Open panel guide",
+        "single_help_static_title": "How to read the static plots",
+        "single_help_static_text": "Use a modest number of shown states first. The left graph displays several stationary eigenstates in the infinite well, vertically shifted to their energies. The right graph shows the energy ladder of all numerically resolved states on the current grid. The probability-density graph below compares one selected quantum stationary state with the uniform classical distribution in the same well.",
+        "single_help_snapshot_title": "How to read the snapshot panel",
+        "single_help_snapshot_text": "Choose a snapshot index after setting the packet center, width, momentum, and basis size. The left graph shows the quantum density at one time together with the classical particle position and the quantum mean position. The middle graph tracks mean position versus time and compares it with the classical bouncing trajectory. The right graph shows the autocorrelation with the initial state, which helps identify revivals.",
+        "single_help_video_title": "How to use the animation",
+        "single_help_video_text": "Press Play below the chart to animate the packet. The three animated panels update together: density in real space, mean-position history, and autocorrelation. Increase Animation speed if the motion feels too fast. The optional GIF export generates the same evolution as a shareable file.",
+        "double_help_static_title": "How to read the static plots",
+        "double_help_static_text": "The first plot shows the two lowest stationary states of the double well together with the barrier. These are the symmetric and antisymmetric combinations that control slow tunnelling. The second plot scans barrier width and shows how the lowest energies, the splitting ΔE, and the tunnelling time change when the barrier is made wider.",
+        "double_help_snapshot_title": "How to read the comparison panel",
+        "double_help_snapshot_text": "This panel compares three related pictures. Upper left: quantum density in the double well at one time, together with the classical point particle and the barrier. Upper right: left and right populations in the quantum case. Lower left: optical intensity slice for the coupled-waveguide analogue. Lower right: full intensity map I(x,z), with the white cursor showing the current propagation distance used in the slice.",
+        "double_help_video_title": "How to use the animation",
+        "double_help_video_text": "Press Play to animate classical motion, quantum tunnelling, and the optical analogue side by side. The classical particle stays on one side of the barrier, while the quantum and optical panels show transfer through coupling. Use a slower animation speed if you want the correspondence between the three panels to be easier to follow.",
+        "finite_help_title": "How to read the finite-well panel",
+        "finite_help_text": "Adjust well width, barrier height, and total box size first. The left graph shows the finite potential well and all numerically found bound states, vertically shifted to their energies. You can see that their wave functions leak slightly into the barrier region. The right graph compares the bound-state energies of the finite well with the corresponding energies of an ideal infinite well of the same width.",
         "single_intro": "Static eigenstates, probability density, wave-packet motion, and a video of the time evolution.",
         "double_intro": "Comparison of three related pictures: classical motion below the barrier, quantum tunnelling, and the optical coupled-waveguide analogue.",
         "optical_intro": "Paraxial propagation of the optical envelope in two coupled waveguides.",
@@ -213,50 +257,94 @@ So a higher and wider barrier usually means weaker coupling and slower transfer 
         "hook_text": "• Proč jsou stavy v jámě diskrétní.  • Proč se vlnový balík nechová jako bodová částice.  • Jak bariéra řídí tunelování.  • Proč může světlo ve spojených vlnovodech napodobovat kvantovou dynamiku.",
         "open_theory": "Otevřít stručnou teorii a reference",
         "how_to_title": "Jak aplikaci používat",
-        "how_to_text": "1. V levém panelu vyber jednu simulaci. 2. Nejprve změň jen několik sliderů. 3. Začni Statickými grafy, kde uvidíš stacionární stavy. 4. Pak použij Snímek pro jeden vybraný čas nebo propagační vzdálenost. 5. Nakonec spusť Animaci tlačítkem Play pod grafem. 6. Pokud je pohyb příliš rychlý, zvyš Rychlost animace (ms na snímek).",
+        "how_to_text": "1. V levém panelu vyber jednu simulaci. 2. Nejprve změň jen několik sliderů. 3. Před změnou parametrů otevři rozbalovací nápovědu nad daným panelem. 4. Začni Statickými grafy, kde uvidíš stacionární stavy a energetické škály. 5. Pak použij Snímek pro jeden vybraný čas nebo propagační vzdálenost. 6. Nakonec spusť Animaci tlačítkem Play pod grafem. 7. Pokud je pohyb příliš rychlý, zvyš Rychlost animace (ms na snímek).",
         "theory_title": "Krátký teoretický přehled",
         "theory_text": r"""
-Aplikace používá záměrně jednoduché jednorozměrné modely, ale hlavní myšlenky jsou stejné jako v mnoha reálných kvantových a optických systémech.
+Aplikace používá záměrně jednoduché jednorozměrné modely. Cílem není maximální realističnost v každém detailu, ale přehledné vizuální srovnání tří pohledů: klasické částice, kvantové vlnové funkce a optického analogu.
 
-Stacionární Schrödingerova rovnice:
+**1. Stacionární stavy v jámě**
+
+Stacionární Schrödingerova rovnice je
 $$
 \hat H \psi_n(x)=E_n\psi_n(x),
 \qquad
 \hat H=-\frac{1}{2}\frac{d^2}{dx^2}+V(x).
 $$
-Vlastní funkce $\psi_n$ popisují dovolené stacionární stavy a vlastní hodnoty $E_n$ jejich energie.
+Funkce $\psi_n(x)$ jsou dovolené stacionární stavy a čísla $E_n$ jejich energie. V omezujícím potenciálu se prosadí jen určité tvary kompatibilní s okrajovými podmínkami, a proto je spektrum diskrétní.
 
-Časový vývoj kvantového stavu:
+**2. Časový vývoj a vlnové balíky**
+
+Lokalizovaný stav podobný částici lze zapsat jako superpozici
 $$
 \psi(x,t)=\sum_n c_n\,\psi_n(x)\,e^{-iE_n t}.
 $$
-Lokalizovaný vlnový balík je tedy superpozicí více stacionárních stavů. Proto se může pohybovat, rozšiřovat, interferovat a po vhodné době se i částečně znovu složit.
+Různé stacionární složky nabírají různé fáze, takže se balík může pohybovat, rozšiřovat, interferovat a později se znovu částečně složit. Pravděpodobnostní hustota je
+$$
+\rho(x,t)=|\psi(x,t)|^2,
+$$
+a střední poloha je
+$$
+\langle x \rangle (t)=\int x\,|\psi(x,t)|^2\,dx.
+$$
 
-V klasickém obrazu je částice bod, který se pohybuje mezi stěnami a na hranách se pružně odráží. To umožňuje dobře srovnat intuitivní částicový obraz se skutečným vlnovým chováním kvantové mechaniky.
+**3. Klasické srovnání**
 
-Pro optickou analogii používáme paraxiální rovnici pro obálku:
+V klasickém obrazu je částice bod s určitou polohou a hybností. V ideální jámě se na stěnách pružně odráží. Tento obraz je intuitivní, ale neumí reprodukovat interferenci, tunelování ani revival.
+
+**4. Dvojitá jáma a tunelování**
+
+Když jsou dvě jámy odděleny bariérou, bývají dva nejnižší stacionární stavy energeticky blízko. Jejich rozštěpení určuje pomalou oscilaci mezi levou a pravou stranou:
+$$
+T_{\mathrm{tunnel}}\approx \frac{\pi}{E_1-E_0}.
+$$
+Vyšší nebo širší bariéra obvykle zmenšuje $E_1-E_0$, a tím zpomaluje přenos.
+
+**5. Konečně hluboká jáma**
+
+Konečná jáma se od nekonečné liší ve dvou důležitých bodech: existuje jen konečný počet vázaných stavů a jejich vlnové funkce mírně pronikají do bariéry. Tyto exponenciálně klesající ocasy jsou přímým projevem vlnové povahy.
+
+**6. Revival vlnového balíku**
+
+V nekonečně hluboké jámě platí přibližně $E_n\propto n^2$. Díky této speciální struktuře se rozptýlený balík může po určité době znovu sfázovat a připomínat počáteční stav. To je revival. Nejde o dekoherenci: vývoj zůstává plně koherentní.
+
+**7. Optický analog**
+
+Pro optickou analogii používáme paraxiální rovnici pro obálku
 $$
 i\frac{\partial A}{\partial z}
-=-\frac{1}{2k_0n_0}\frac{\partial^2A}{\partial x^2}+V_{\mathrm{opt}}(x)A,
+=-\frac{1}{2k_0n_0}\frac{\partial^2A}{\partial x^2}+V_{\mathrm{opt}}(x)A.
 $$
-kde souřadnice šíření $z$ hraje roli proměnné analogické času $t$. Ve spojených vlnovodech se tak světlo může přelévat mezi dvěma kanály podobně jako kvantová částice tuneluje mezi dvěma jamami.
-
-V dvojité jámě nebo dvojvlnovodu řídí rozštěpení dvou nejnižších módů charakteristickou dobu oscilace:
+Souřadnice šíření $z$ zde matematicky hraje roli podobnou času $t$. Ve spojených vlnovodech se tak světlo může přelévat mezi dvěma kanály obdobně jako kvantová částice tuneluje mezi dvěma jamami:
 $$
-T_{\mathrm{tunnel}}\approx \frac{\pi}{E_1-E_0},
-\qquad
 L_c\approx \frac{\pi}{\beta_1-\beta_0}.
 $$
-Vyšší a širší bariéra tedy obvykle znamená slabší vazbu a pomalejší přenos mezi levou a pravou stranou.
+Aplikace tak umožňuje sledovat stejnou matematickou strukturu ve dvou různých fyzikálních jazycích.
 """,
         "references": "Vybrané reference",
         "refs_text": """
-- D. J. Griffiths, D. F. Schroeter, *Introduction to Quantum Mechanics*, 3. vyd. (Cambridge University Press, 2018).
-- B. E. A. Saleh, M. C. Teich, *Fundamentals of Photonics*, 3. vyd. (Wiley, 2019).
-- E. Hecht, *Optics*, 5. vyd. (Pearson, 2016).
-- D. N. Christodoulides, F. Lederer, Y. Silberberg, *Nature* **424**, 817–823 (2003).
-- R. W. Robinett, *Physics Reports* **392**, 1–119 (2004) — revivaly vlnových balíků.
+- D. J. Griffiths, D. F. Schroeter, *Introduction to Quantum Mechanics*, 3. vyd. (Cambridge University Press, 2018) — základy 1D jam, stacionární stavy, vlnové balíky.
+- R. Shankar, *Principles of Quantum Mechanics*, 2. vyd. (Springer, 1994) — přehledná formulace operátorového přístupu a časového vývoje.
+- R. W. Robinett, *Quantum wave packet revivals*, *Physics Reports* **392**, 1–119 (2004) — přehled revivalů a frakčních revivalů.
+- B. E. A. Saleh, M. C. Teich, *Fundamentals of Photonics*, 3. vyd. (Wiley, 2019) — paraxiální optika a vedení světla.
+- E. Hecht, *Optics*, 5. vyd. (Pearson, 2016) — základní optický kontext.
+- D. N. Christodoulides, F. Lederer, Y. Silberberg, *Discretizing light behaviour in linear and nonlinear waveguide lattices*, *Nature* **424**, 817–823 (2003) — optický analog kvantového transportu.
+- S. Longhi, *Quantum-optical analogies using photonic structures*, *Laser & Photonics Reviews* **3**, 243–261 (2009) — širší přehled optických analogií.
 """,
+        "panel_help": "Otevřít návod k panelu",
+        "single_help_static_title": "Jak číst statické grafy",
+        "single_help_static_text": "Začni s menším počtem zobrazených stavů. Levý graf ukazuje několik stacionárních vlastních stavů v nekonečně hluboké jámě, svisle posunutých na své energie. Pravý graf ukazuje energetický žebříček všech numericky rozlišených stavů na aktuální mřížce. Níže je ještě graf pravděpodobnostní hustoty vybraného kvantového stavu ve srovnání s rovnoměrnou klasickou distribucí ve stejné jámě.",
+        "single_help_snapshot_title": "Jak číst panel se snímkem",
+        "single_help_snapshot_text": "Po nastavení středu balíku, jeho šířky, hybnosti a počtu bázových stavů zvol index snímku. Levý graf ukazuje kvantovou hustotu v jednom čase spolu s polohou klasické částice a se střední polohou kvantového balíku. Prostřední graf sleduje střední polohu v čase a porovnává ji s klasickou odraženou trajektorií. Pravý graf ukazuje autokorelaci s počátečním stavem, což pomáhá rozpoznat revivaly.",
+        "single_help_video_title": "Jak používat animaci",
+        "single_help_video_text": "Tlačítkem Play pod grafem spustíš animaci. Tři animované panely se mění současně: hustota v reálném prostoru, historie střední polohy a autokorelace. Pokud je pohyb příliš rychlý, zvyš rychlost animace v ms na snímek. Volitelný export GIFu vytvoří stejný vývoj jako sdílitelný soubor.",
+        "double_help_static_title": "Jak číst statické grafy",
+        "double_help_static_text": "První graf ukazuje dva nejnižší stacionární stavy dvojité jámy spolu s bariérou. Jde o symetrickou a antisymetrickou kombinaci, které určují pomalé tunelování. Druhý graf skenuje šířku bariéry a ukazuje, jak se při jejím zvětšování mění nejnižší energie, rozštěpení ΔE i tunelovací doba.",
+        "double_help_snapshot_title": "Jak číst srovnávací panel",
+        "double_help_snapshot_text": "Tento panel porovnává tři příbuzné obrazy. Vlevo nahoře je kvantová hustota v dvojité jámě v jednom čase spolu s klasickou bodovou částicí a bariérou. Vpravo nahoře jsou levá a pravá populace v kvantovém případě. Vlevo dole je řez optickou intenzitou pro analogii dvou vlnovodů. Vpravo dole je plná mapa intenzity I(x,z), kde bílý kurzor ukazuje aktuální propagační vzdálenost použitou v řezu.",
+        "double_help_video_title": "Jak používat animaci",
+        "double_help_video_text": "Tlačítkem Play spustíš současně klasický pohyb, kvantové tunelování i optický analog. Klasická částice zůstává na jedné straně bariéry, zatímco kvantový a optický panel ukazují přenos díky vazbě. Pro snazší sledování correspondence mezi panely zvol pomalejší animaci.",
+        "finite_help_title": "Jak číst panel konečné jámy",
+        "finite_help_text": "Nejprve nastav šířku jámy, výšku bariéry a celkovou velikost výpočetního boxu. Levý graf ukazuje konečný potenciál a všechny numericky nalezené vázané stavy, svisle posunuté na své energie. Je na nich vidět, že vlnové funkce mírně prosakují do bariéry. Pravý graf porovnává energie vázaných stavů konečné jámy s odpovídajícími energiemi ideální nekonečně hluboké jámy stejné šířky.",
         "single_intro": "Stacionární stavy, pravděpodobnostní hustota, pohyb vlnového balíku a video časového vývoje.",
         "double_intro": "Srovnání tří příbuzných obrazů: klasický pohyb pod bariérou, kvantové tunelování a optický analog ve dvojici vlnovodů.",
         "optical_intro": "Paraxiální šíření optické obálky ve dvou vazebně spojených vlnovodech.",
@@ -1247,16 +1335,22 @@ if section == tr(lang, "single"):
 
     tabs = st.tabs([tr(lang, "tab_static"), tr(lang, "tab_snapshot"), tr(lang, "tab_video")])
     with tabs[0]:
+        with st.expander(f"{tr(lang, 'panel_help')}: {tr(lang, 'single_help_static_title')}", expanded=False):
+            st.markdown(tr(lang, "single_help_static_text"))
         st.pyplot(plot_single_stationary(static_data, L, n_show, lang), use_container_width=True)
         st.caption(tr(lang, "all_states_note"))
         st.pyplot(plot_single_probability(static_data, L, state_n, lang), use_container_width=True)
     with tabs[1]:
+        with st.expander(f"{tr(lang, 'panel_help')}: {tr(lang, 'single_help_snapshot_title')}", expanded=False):
+            st.markdown(tr(lang, "single_help_snapshot_text"))
         st.pyplot(plot_single_snapshot(sim, idx, lang), use_container_width=True)
         cmet1, cmet2 = st.columns(2)
         cmet1.metric(tr(lang, "revival_time"), f"{sim['T_rev']:.4f}")
         cmet2.metric(tr(lang, "revival_strength"), f"{np.max(sim['autocorr']):.4f}")
         st.info(tr(lang, "revival_note"))
     with tabs[2]:
+        with st.expander(f"{tr(lang, 'panel_help')}: {tr(lang, 'single_help_video_title')}", expanded=False):
+            st.markdown(tr(lang, "single_help_video_text"))
         st.markdown(f"**{tr(lang, 'video_section_single')}**")
         speed_single = st.slider(tr(lang, "anim_speed"), 100, 520, 240, 10, key="speed_single")
         st.caption(tr(lang, "anim_smoother"))
@@ -1296,14 +1390,20 @@ elif section == tr(lang, "double"):
 
     tabs = st.tabs([tr(lang, "tab_static"), tr(lang, "tab_snapshot"), tr(lang, "tab_video")])
     with tabs[0]:
+        with st.expander(f"{tr(lang, 'panel_help')}: {tr(lang, 'double_help_static_title')}", expanded=False):
+            st.markdown(tr(lang, "double_help_static_text"))
         st.pyplot(plot_double_stationary(dw, lang), use_container_width=True)
         widths = np.linspace(0.04, 0.30, 12)
         E0, E1, dE, Tt = compute_barrier_scan(widths, V0=V0)
         st.pyplot(plot_barrier_scan(widths, E0, E1, dE, Tt, lang), use_container_width=True)
         st.info(tr(lang, "scan_note"))
     with tabs[1]:
+        with st.expander(f"{tr(lang, 'panel_help')}: {tr(lang, 'double_help_snapshot_title')}", expanded=False):
+            st.markdown(tr(lang, "double_help_snapshot_text"))
         st.pyplot(plot_double_snapshot(dw, opt, idx_q, idx_o, lang), use_container_width=True)
     with tabs[2]:
+        with st.expander(f"{tr(lang, 'panel_help')}: {tr(lang, 'double_help_video_title')}", expanded=False):
+            st.markdown(tr(lang, "double_help_video_text"))
         st.markdown(f"**{tr(lang, 'video_section_double')}**")
         speed_double = st.slider(tr(lang, "anim_speed"), 80, 420, 220, 10, key="speed_double")
         st.caption(tr(lang, "anim_smoother"))
@@ -1329,6 +1429,8 @@ elif section == tr(lang, "finite"):
         N_f = st.slider(tr(lang, "grid"), 180, 460, 360, 20, key="finite_grid")
 
     fw = compute_finite_well(well_width=well_width, V_barrier=V_barrier, L_f=L_f, N_f=N_f)
+    with st.expander(f"{tr(lang, 'panel_help')}: {tr(lang, 'finite_help_title')}", expanded=False):
+        st.markdown(tr(lang, "finite_help_text"))
     st.metric(tr(lang, "bound_states"), str(len(fw["bound_idx"])))
     st.pyplot(plot_finite_well(fw, lang), use_container_width=True)
 
