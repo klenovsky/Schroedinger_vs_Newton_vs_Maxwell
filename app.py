@@ -186,6 +186,12 @@ $$
         "gif_note": "Optional: you can also export the same evolution as a GIF.",
         "anim_speed": "Animation speed (ms per frame)",
         "anim_smoother": "Slower values make the motion easier to follow and reduce visual flicker.",
+        "all_states_note": "An infinite well has infinitely many exact eigenstates. The app therefore shows all states resolved by the current numerical grid/basis and lets you inspect any selected one.",
+        "all_states_title": "All numerically resolved states",
+        "revival_title": "Autocorrelation and revival",
+        "revival_strength": "Revival strength max |<ψ(0)|ψ(t)>|²",
+        "revival_time": "Revival time T_rev",
+        "time_factor": "Maximum time in units of T_rev",
     },
     "Czech": {
         "app_title": "Kvantová, klasická a optická dynamika v jamách",
@@ -304,6 +310,12 @@ $$
         "gif_note": "Volitelně lze stejný vývoj exportovat i jako GIF.",
         "anim_speed": "Rychlost animace (ms na snímek)",
         "anim_smoother": "Vyšší hodnota animaci zpomalí a omezí vizuální blikání.",
+        "all_states_note": "Nekonečně hluboká jáma má přesně vzato nekonečně mnoho vlastních stavů. Aplikace proto ukazuje všechny stavy zachycené zvolenou numerickou mřížkou/bází a dovoluje vybrat libovolný z nich.",
+        "all_states_title": "Všechny numericky zachycené stavy",
+        "revival_title": "Autokorelace a revival",
+        "revival_strength": "Síla revivalu max |<ψ(0)|ψ(t)>|²",
+        "revival_time": "Revival time T_rev",
+        "time_factor": "Maximální čas v jednotkách T_rev",
     },
 }
 
@@ -385,21 +397,22 @@ def infinite_well_analytic(x: np.ndarray, L: float, n_values: np.ndarray) -> Tup
 
 
 @st.cache_data(show_spinner=False)
-def compute_single_well(L: float = 1.0, N: int = 220, n_show: int = 5):
+def compute_single_well(L: float = 1.0, N: int = 220, n_show: int = 8):
     x = np.linspace(L / (N + 1), L - L / (N + 1), N)
     V = np.zeros_like(x)
     diag, off, dx = build_tridiagonal(x, V)
-    E_num, psi_num = solve_tridiagonal(diag, off, n_eigs=max(n_show, 140))
+    n_all = min(N, max(180, n_show))
+    E_num, psi_num = solve_tridiagonal(diag, off, n_eigs=n_all)
     psi_num = normalize_columns(psi_num.astype(complex), dx)
-    n_vals = np.arange(1, n_show + 1)
+    n_vals = np.arange(1, n_all + 1)
     phi_an, E_an = infinite_well_analytic(x, L, n_vals)
     return x, dx, V, E_num, psi_num, E_an, phi_an
 
 
 @st.cache_data(show_spinner=False)
 def compute_single_dynamics(L: float = 1.0, N: int = 220, x0: float = 0.22, sigma: float = 0.06,
-                            k0: float = 24.0, n_basis: int = 90, t_max: float = 0.16,
-                            n_times: int = 220):
+                            k0: float = 24.0, n_basis: int = 120, t_factor: float = 1.10,
+                            n_times: int = 560):
     x = np.linspace(L / (N + 1), L - L / (N + 1), N)
     V = np.zeros_like(x)
     diag, off, dx = build_tridiagonal(x, V)
@@ -410,14 +423,18 @@ def compute_single_dynamics(L: float = 1.0, N: int = 220, x0: float = 0.22, sigm
     psi0 = normalize(psi0, dx)
 
     coeffs = project_state(psi0, psi, dx)
+    T_rev = 4.0 * L**2 / np.pi
+    t_max = float(t_factor) * T_rev
     times = np.linspace(0.0, t_max, n_times)
     psi_xt = evolve_basis(coeffs, E, psi, times)
     dens = np.abs(psi_xt) ** 2
     x_mean = expectation_x(psi_xt, x, dx)
     x_class = classical_box_trajectory(times, x0=x0, v=k0, xmin=0.0, xmax=L)
+    autocorr = np.abs(np.sum(np.conj(psi0)[:, None] * psi_xt, axis=0) * dx) ** 2
     return {
         "x": x, "dx": dx, "times": times, "psi0": psi0, "psi_xt": psi_xt, "dens": dens,
         "x_mean": x_mean, "x_class": x_class, "E": E, "basis": psi,
+        "autocorr": autocorr, "T_rev": T_rev, "t_max": t_max,
     }
 
 
@@ -566,33 +583,36 @@ def _base_fig(nrows=1, ncols=1, figsize=(8, 4.5)):
 
 
 def plot_single_stationary(data, L: float, n_show: int, lang: str):
-    x, V, E_num, psi_num, E_an = data[0], data[2], data[3], data[4], data[5]
-    fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.4))
+    x, V, E_num, psi_num = data[0], data[2], data[3], data[4]
+    n_all = len(E_num)
+    n_show = min(n_show, n_all)
+    fig, axes = plt.subplots(1, 2, figsize=(12.8, 4.6))
     fig.patch.set_facecolor(FIG_FACE)
 
     ax = axes[0]
     ax.plot(x, V, lw=2, label="V(x)")
+    scale = 0.16 * (E_num[min(n_show, n_all - 1)] - E_num[0] + 1e-9)
+    scale = max(scale, 0.16)
     for n in range(n_show):
-        y = 0.18 * np.real(psi_num[:, n]) + E_num[n]
-        ax.plot(x, y, lw=2, label=f"n={n+1}")
-        ax.axhline(E_num[n], lw=0.8, alpha=0.25)
+        y = scale * np.real(psi_num[:, n]) + E_num[n]
+        ax.plot(x, y, lw=1.8, label=f"n={n+1}")
+        ax.axhline(E_num[n], lw=0.8, alpha=0.22)
     ax.set_xlabel("x")
     ax.set_ylabel("energy / state shape" if lang == "English" else "energie / tvar stavu")
     ax.set_title(tr(lang, "single_states_title"))
     ax.grid(True, alpha=0.22)
-    ax.legend(fontsize=9)
+    ax.legend(fontsize=8, ncol=2)
 
     ax = axes[1]
-    idx = np.arange(1, n_show + 1)
-    ax.plot(idx, E_num[:n_show], "o-", lw=2, label="numeric" if lang == "English" else "numericky")
-    ax.plot(idx, E_an[:n_show], "s--", lw=2, label="analytic" if lang == "English" else "analyticky")
+    idx = np.arange(1, n_all + 1)
+    ax.plot(idx, E_num, "o", ms=3.2, alpha=0.8, label=tr(lang, "all_states_title"))
     ax.set_xlabel("state index n" if lang == "English" else "číslo stavu n")
     ax.set_ylabel("energy" if lang == "English" else "energie")
+    ax.set_title(tr(lang, "all_states_title"))
     ax.grid(True, alpha=0.22)
-    ax.legend()
+    ax.legend(fontsize=9)
     fig.tight_layout()
     return fig
-
 
 
 def plot_single_probability(data, L: float, state_n: int, lang: str):
@@ -615,7 +635,8 @@ def plot_single_probability(data, L: float, state_n: int, lang: str):
 
 def plot_single_snapshot(sim, idx: int, lang: str):
     x, dens, x_mean, x_class, times = sim["x"], sim["dens"], sim["x_mean"], sim["x_class"], sim["times"]
-    fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.4))
+    autocorr, T_rev = sim["autocorr"], sim["T_rev"]
+    fig, axes = plt.subplots(1, 3, figsize=(15.0, 4.4))
     fig.patch.set_facecolor(FIG_FACE)
 
     ax = axes[0]
@@ -624,22 +645,30 @@ def plot_single_snapshot(sim, idx: int, lang: str):
     ax.plot([x_class[idx]], [0.08 * max(np.max(dens[:, idx]), 1e-12)], "o", ms=8, label=tr(lang, "classical_particle"))
     ax.set_xlabel("x")
     ax.set_ylabel("density" if lang == "English" else "hustota")
-    ax.set_title(f"{tr(lang, 'single_snapshot_title')}  (t = {times[idx]:.4f})")
+    ax.set_title(f"{tr(lang, 'single_snapshot_title')}  (t/T_rev = {times[idx]/T_rev:.3f})")
     ax.grid(True, alpha=0.22)
     ax.legend(fontsize=9)
 
     ax = axes[1]
-    ax.plot(times, x_mean, lw=2.2, label=tr(lang, "mean_position"))
-    ax.plot(times, x_class, "--", lw=2, label=tr(lang, "classical_particle"))
-    ax.axvline(times[idx], color="k", ls=":", lw=1.5)
-    ax.set_xlabel("time t" if lang == "English" else "čas t")
+    ax.plot(times / T_rev, x_mean, lw=2.2, label=tr(lang, "mean_position"))
+    ax.plot(times / T_rev, x_class, "--", lw=2, label=tr(lang, "classical_particle"))
+    ax.axvline(times[idx] / T_rev, color="k", ls=":", lw=1.5)
+    ax.set_xlabel(r"t / T$_{rev}$")
     ax.set_ylabel("position" if lang == "English" else "poloha")
     ax.set_title(tr(lang, "single_history_title"))
     ax.grid(True, alpha=0.22)
-    ax.legend()
+    ax.legend(fontsize=9)
+
+    ax = axes[2]
+    ax.plot(times / T_rev, autocorr, lw=2.2)
+    ax.axvline(times[idx] / T_rev, color="k", ls=":", lw=1.5)
+    ax.set_xlabel(r"t / T$_{rev}$")
+    ax.set_ylabel("overlap" if lang == "English" else "překryv")
+    ax.set_ylim(0, 1.05)
+    ax.set_title(tr(lang, "revival_title"))
+    ax.grid(True, alpha=0.22)
     fig.tight_layout()
     return fig
-
 
 
 def plot_double_stationary(dw, lang: str):
@@ -828,7 +857,7 @@ def _animation_slider(steps):
     }]
 
 
-def make_single_animation(sim, lang: str, frame_duration_ms: int = 180):
+def make_single_animation(sim, lang: str, frame_duration_ms: int = 220):
     if not HAS_PLOTLY:
         return None
     x = sim["x"]
@@ -836,21 +865,27 @@ def make_single_animation(sim, lang: str, frame_duration_ms: int = 180):
     x_mean = sim["x_mean"]
     x_class = sim["x_class"]
     times = sim["times"]
-    step = max(1, len(times) // 55)
+    autocorr = sim["autocorr"]
+    T_rev = sim["T_rev"]
+    step = max(1, len(times) // 90)
     idxs = np.arange(0, len(times), step, dtype=int)
+    if idxs[-1] != len(times) - 1:
+        idxs = np.append(idxs, len(times) - 1)
     ymax = float(1.05 * np.max(dens))
     ymin_h = float(min(np.min(x_mean), np.min(x_class)) - 0.05)
     ymax_h = float(max(np.max(x_mean), np.max(x_class)) + 0.05)
+    tnorm = times / T_rev
 
-    fig = make_subplots(rows=1, cols=2, subplot_titles=(tr(lang, "single_snapshot_title"), tr(lang, "single_history_title")))
-    fig.add_trace(go.Scatter(x=x, y=dens[:, idxs[0]], mode="lines", name=tr(lang, "quantum_density"), line=dict(width=3)), row=1, col=1)
-    fig.add_trace(go.Scatter(x=[x_mean[idxs[0]], x_mean[idxs[0]]], y=[0, ymax], mode="lines", name=tr(lang, "mean_position"), line=dict(dash="dash")), row=1, col=1)
-    fig.add_trace(go.Scatter(x=[x_class[idxs[0]]], y=[0.08 * ymax], mode="markers", name=tr(lang, "classical_particle"), marker=dict(size=10)), row=1, col=1)
-
-    fig.add_trace(go.Scatter(x=times, y=x_mean, mode="lines", name=tr(lang, "mean_position"), line=dict(width=3), showlegend=False), row=1, col=2)
-    fig.add_trace(go.Scatter(x=times, y=x_class, mode="lines", name=tr(lang, "classical_particle"), line=dict(dash="dash", width=3), showlegend=False), row=1, col=2)
-    fig.add_trace(go.Scatter(x=[times[idxs[0]]], y=[x_mean[idxs[0]]], mode="markers", name="current quantum", marker=dict(size=10), showlegend=False), row=1, col=2)
-    fig.add_trace(go.Scatter(x=[times[idxs[0]]], y=[x_class[idxs[0]]], mode="markers", name="current classical", marker=dict(size=10, symbol="diamond"), showlegend=False), row=1, col=2)
+    fig = make_subplots(rows=1, cols=3, subplot_titles=(tr(lang, "single_snapshot_title"), tr(lang, "single_history_title"), tr(lang, "revival_title")))
+    fig.add_trace(go.Scatter(x=x, y=dens[:, idxs[0]], mode="lines", name=tr(lang, "quantum_density"), line=dict(width=3, color="#1f77b4")), row=1, col=1)
+    fig.add_trace(go.Scatter(x=[x_mean[idxs[0]], x_mean[idxs[0]]], y=[0, ymax], mode="lines", name=tr(lang, "mean_position"), line=dict(dash="dash", color="#d62728")), row=1, col=1)
+    fig.add_trace(go.Scatter(x=[x_class[idxs[0]]], y=[0.08 * ymax], mode="markers", name=tr(lang, "classical_particle"), marker=dict(size=9, color="#2ca02c")), row=1, col=1)
+    fig.add_trace(go.Scatter(x=tnorm, y=x_mean, mode="lines", name=tr(lang, "mean_position"), line=dict(width=3, color="#1f77b4"), showlegend=False), row=1, col=2)
+    fig.add_trace(go.Scatter(x=tnorm, y=x_class, mode="lines", name=tr(lang, "classical_particle"), line=dict(dash="dash", width=3, color="#2ca02c"), showlegend=False), row=1, col=2)
+    fig.add_trace(go.Scatter(x=[tnorm[idxs[0]]], y=[x_mean[idxs[0]]], mode="markers", marker=dict(size=9, color="#1f77b4"), showlegend=False), row=1, col=2)
+    fig.add_trace(go.Scatter(x=[tnorm[idxs[0]]], y=[x_class[idxs[0]]], mode="markers", marker=dict(size=9, symbol="diamond", color="#2ca02c"), showlegend=False), row=1, col=2)
+    fig.add_trace(go.Scatter(x=tnorm, y=autocorr, mode="lines", line=dict(width=3, color="#9467bd"), showlegend=False), row=1, col=3)
+    fig.add_trace(go.Scatter(x=[tnorm[idxs[0]]], y=[autocorr[idxs[0]]], mode="markers", marker=dict(size=9, color="#9467bd"), showlegend=False), row=1, col=3)
 
     frames = []
     slider_steps = []
@@ -858,19 +893,18 @@ def make_single_animation(sim, lang: str, frame_duration_ms: int = 180):
         frames.append(go.Frame(
             name=str(i),
             data=[
-                go.Scatter(x=x, y=dens[:, i]),
-                go.Scatter(x=[x_mean[i], x_mean[i]], y=[0, ymax]),
-                go.Scatter(x=[x_class[i]], y=[0.08 * ymax]),
-                go.Scatter(x=times, y=x_mean),
-                go.Scatter(x=times, y=x_class),
-                go.Scatter(x=[times[i]], y=[x_mean[i]]),
-                go.Scatter(x=[times[i]], y=[x_class[i]]),
+                go.Scatter(x=x, y=dens[:, i], mode="lines", line=dict(width=3, color="#1f77b4")),
+                go.Scatter(x=[x_mean[i], x_mean[i]], y=[0, ymax], mode="lines", line=dict(dash="dash", color="#d62728")),
+                go.Scatter(x=[x_class[i]], y=[0.08 * ymax], mode="markers", marker=dict(size=9, color="#2ca02c")),
+                go.Scatter(x=[tnorm[i]], y=[x_mean[i]], mode="markers", marker=dict(size=9, color="#1f77b4")),
+                go.Scatter(x=[tnorm[i]], y=[x_class[i]], mode="markers", marker=dict(size=9, symbol="diamond", color="#2ca02c")),
+                go.Scatter(x=[tnorm[i]], y=[autocorr[i]], mode="markers", marker=dict(size=9, color="#9467bd")),
             ],
-            traces=[0, 1, 2, 3, 4, 5, 6],
-            layout=go.Layout(title_text=f"{tr(lang, 'video_section_single')} — t = {times[i]:.4f}"),
+            traces=[0, 1, 2, 5, 6, 8],
+            layout=go.Layout(title_text=f"{tr(lang, 'video_section_single')} — t/T_rev = {tnorm[i]:.3f}"),
         ))
         slider_steps.append({
-            "label": f"{times[i]:.3f}",
+            "label": f"{tnorm[i]:.2f}",
             "method": "animate",
             "args": [[str(i)], {"frame": {"duration": 0, "redraw": False}, "mode": "immediate", "transition": {"duration": 0}}],
         })
@@ -878,9 +912,11 @@ def make_single_animation(sim, lang: str, frame_duration_ms: int = 180):
     fig.frames = frames
     fig.update_xaxes(title_text="x", row=1, col=1)
     fig.update_yaxes(title_text="density" if lang == "English" else "hustota", range=[0, ymax], row=1, col=1)
-    fig.update_xaxes(title_text="time t" if lang == "English" else "čas t", row=1, col=2)
+    fig.update_xaxes(title_text=r"t / T$_{rev}$", row=1, col=2)
     fig.update_yaxes(title_text="position" if lang == "English" else "poloha", range=[ymin_h, ymax_h], row=1, col=2)
-    fig.update_layout(height=500, title_text=f"{tr(lang, 'video_section_single')} — t = {times[idxs[0]]:.4f}", updatemenus=_animation_controls(frame_duration_ms=frame_duration_ms, redraw=False), sliders=_animation_slider(slider_steps))
+    fig.update_xaxes(title_text=r"t / T$_{rev}$", row=1, col=3)
+    fig.update_yaxes(title_text="overlap" if lang == "English" else "překryv", range=[0, 1.05], row=1, col=3)
+    fig.update_layout(height=500, template="plotly_white", title_text=f"{tr(lang, 'video_section_single')} — t/T_rev = {tnorm[idxs[0]]:.3f}", updatemenus=_animation_controls(frame_duration_ms=frame_duration_ms, redraw=False), sliders=_animation_slider(slider_steps))
     return fig
 
 
@@ -940,19 +976,21 @@ def make_double_animation(dw, opt, lang: str, frame_duration_ms: int = 220):
     return fig
 
 
-def make_optical_animation(opt, lang: str, frame_duration_ms: int = 220):
+def make_optical_animation(opt, lang: str, frame_duration_ms: int = 260):
     if not HAS_PLOTLY:
         return None
-    idxs = np.arange(0, len(opt["z_vals"]), max(1, len(opt["z_vals"]) // 55), dtype=int)
+    idxs = np.arange(0, len(opt["z_vals"]), max(1, len(opt["z_vals"]) // 70), dtype=int)
+    if idxs[-1] != len(opt["z_vals"]) - 1:
+        idxs = np.append(idxs, len(opt["z_vals"]) - 1)
     omax = float(1.05 * np.max(opt["I_opt"]))
     z_norm = opt["z_vals"] / opt["L_couple"]
 
     fig = make_subplots(rows=1, cols=2, subplot_titles=(tr(lang, "optical_intensity"), tr(lang, "optical_snapshot_title")))
-    fig.add_trace(go.Scatter(x=opt["x"], y=opt["I_opt"][:, idxs[0]], mode="lines", name=tr(lang, "optical_intensity"), line=dict(width=3)), row=1, col=1)
-    fig.add_trace(go.Scatter(x=opt["x"], y=120 * (opt["n_profile"] - opt["n_clad"]), mode="lines", name="index", line=dict(dash="dash")), row=1, col=1)
-    fig.add_trace(go.Scatter(x=[opt["x_mean"][idxs[0]], opt["x_mean"][idxs[0]]], y=[0, omax], mode="lines", name=tr(lang, "mean_position"), line=dict(dash="dot")), row=1, col=1)
-    fig.add_trace(go.Heatmap(z=opt["I_opt"], x=z_norm, y=opt["x"], colorscale="Viridis", showscale=True, colorbar=dict(title="I"), zsmooth="best"), row=1, col=2)
-    fig.add_trace(go.Scatter(x=[z_norm[idxs[0]], z_norm[idxs[0]]], y=[opt["x"][0], opt["x"][-1]], mode="lines", name="cursor", line=dict(color="white", dash="dot", width=3)), row=1, col=2)
+    fig.add_trace(go.Scatter(x=opt["x"], y=opt["I_opt"][:, idxs[0]], mode="lines", name=tr(lang, "optical_intensity"), line=dict(width=3, color="#1f77b4")), row=1, col=1)
+    fig.add_trace(go.Scatter(x=opt["x"], y=120 * (opt["n_profile"] - opt["n_clad"]), mode="lines", name="index", line=dict(dash="dash", color="#555555")), row=1, col=1)
+    fig.add_trace(go.Scatter(x=[opt["x_mean"][idxs[0]], opt["x_mean"][idxs[0]]], y=[0, omax], mode="lines", name=tr(lang, "mean_position"), line=dict(dash="dot", color="#d62728")), row=1, col=1)
+    fig.add_trace(go.Heatmap(z=opt["I_opt"], x=z_norm, y=opt["x"], colorscale="Viridis", showscale=True, colorbar=dict(title="I"), zmin=float(np.min(opt["I_opt"])), zmax=float(np.max(opt["I_opt"]))), row=1, col=2)
+    fig.add_trace(go.Scatter(x=[z_norm[idxs[0]], z_norm[idxs[0]]], y=[opt["x"][0], opt["x"][-1]], mode="lines", name="cursor", line=dict(color="#ffdddd", dash="dot", width=3)), row=1, col=2)
 
     frames = []
     slider_steps = []
@@ -960,9 +998,9 @@ def make_optical_animation(opt, lang: str, frame_duration_ms: int = 220):
         frames.append(go.Frame(
             name=str(i),
             data=[
-                go.Scatter(x=opt["x"], y=opt["I_opt"][:, i]),
-                go.Scatter(x=[opt["x_mean"][i], opt["x_mean"][i]], y=[0, omax]),
-                go.Scatter(x=[z_norm[i], z_norm[i]], y=[opt["x"][0], opt["x"][-1]]),
+                go.Scatter(x=opt["x"], y=opt["I_opt"][:, i], mode="lines", line=dict(width=3, color="#1f77b4")),
+                go.Scatter(x=[opt["x_mean"][i], opt["x_mean"][i]], y=[0, omax], mode="lines", line=dict(dash="dot", color="#d62728")),
+                go.Scatter(x=[z_norm[i], z_norm[i]], y=[opt["x"][0], opt["x"][-1]], mode="lines", line=dict(color="#ffdddd", dash="dot", width=3)),
             ],
             traces=[0, 2, 4],
             layout=go.Layout(title_text=f"{tr(lang, 'video_section_optical')} — z/Lc = {z_norm[i]:.2f}"),
@@ -978,7 +1016,7 @@ def make_optical_animation(opt, lang: str, frame_duration_ms: int = 220):
     fig.update_yaxes(title_text="intensity" if lang == "English" else "intenzita", range=[0, omax], row=1, col=1)
     fig.update_xaxes(title_text=r"z / L$_c$", row=1, col=2)
     fig.update_yaxes(title_text="x", row=1, col=2)
-    fig.update_layout(height=500, title_text=f"{tr(lang, 'video_section_optical')} — z/Lc = {z_norm[idxs[0]]:.2f}", updatemenus=_animation_controls(frame_duration_ms=frame_duration_ms, redraw=False), sliders=_animation_slider(slider_steps), showlegend=False)
+    fig.update_layout(height=500, template="plotly_white", title_text=f"{tr(lang, 'video_section_optical')} — z/Lc = {z_norm[idxs[0]]:.2f}", updatemenus=_animation_controls(frame_duration_ms=frame_duration_ms, redraw=False), sliders=_animation_slider(slider_steps), showlegend=False)
     return fig
 
 
@@ -1161,30 +1199,34 @@ elif section == tr(lang, "single"):
     with c1:
         L = st.slider(tr(lang, "well_width"), 0.6, 2.0, 1.0, 0.05)
         N = st.slider(tr(lang, "grid"), 140, 320, 220, 20)
-        n_show = st.slider(tr(lang, "show_states"), 2, 6, 4, 1)
+        n_show = st.slider(tr(lang, "show_states"), 4, min(24, N), min(10, N), 1)
     with c2:
-        state_n = st.slider(tr(lang, "chosen_state"), 1, max(2, n_show), 1, 1)
+        state_n = st.slider(tr(lang, "chosen_state"), 1, min(180, N), 1, 1)
         x0 = st.slider(tr(lang, "packet_center"), 0.05, float(L - 0.05), min(0.22, float(L - 0.08)), 0.01)
         sigma = st.slider(tr(lang, "packet_sigma"), 0.02, 0.18, 0.06, 0.01)
     with c3:
         k0 = st.slider(tr(lang, "packet_k0"), 2.0, 35.0, 24.0, 1.0)
-        t_max = st.slider(tr(lang, "max_time"), 0.05, 0.40, 0.16, 0.01)
-        n_basis = st.slider(tr(lang, "basis_count"), 20, 140, 90, 10)
+        t_factor = st.slider(tr(lang, "time_factor"), 0.20, 2.20, 1.10, 0.05)
+        n_basis = st.slider(tr(lang, "basis_count"), 40, min(180, N), min(120, N), 10)
 
     static_data = compute_single_well(L=L, N=N, n_show=n_show)
-    sim = compute_single_dynamics(L=L, N=N, x0=x0, sigma=sigma, k0=k0, n_basis=n_basis, t_max=t_max)
+    sim = compute_single_dynamics(L=L, N=N, x0=x0, sigma=sigma, k0=k0, n_basis=n_basis, t_factor=t_factor)
     idx = st.slider(tr(lang, "snapshot"), 0, len(sim["times"]) - 1, len(sim["times"]) // 3, 1)
 
     tabs = st.tabs([tr(lang, "tab_static"), tr(lang, "tab_snapshot"), tr(lang, "tab_video"), tr(lang, "tab_3d")])
     with tabs[0]:
         st.pyplot(plot_single_stationary(static_data, L, n_show, lang), use_container_width=True)
+        st.caption(tr(lang, "all_states_note"))
         st.pyplot(plot_single_probability(static_data, L, state_n, lang), use_container_width=True)
     with tabs[1]:
         st.pyplot(plot_single_snapshot(sim, idx, lang), use_container_width=True)
+        cmet1, cmet2 = st.columns(2)
+        cmet1.metric(tr(lang, "revival_time"), f"{sim['T_rev']:.4f}")
+        cmet2.metric(tr(lang, "revival_strength"), f"{np.max(sim['autocorr']):.4f}")
         st.info(tr(lang, "revival_note"))
     with tabs[2]:
         st.markdown(f"**{tr(lang, 'video_section_single')}**")
-        speed_single = st.slider(tr(lang, "anim_speed"), 80, 420, 190, 10, key="speed_single")
+        speed_single = st.slider(tr(lang, "anim_speed"), 100, 520, 240, 10, key="speed_single")
         st.caption(tr(lang, "anim_smoother"))
         st.caption(tr(lang, "play_note"))
         anim_fig = make_single_animation(sim, lang, frame_duration_ms=speed_single)
@@ -1293,7 +1335,7 @@ elif section == tr(lang, "optical"):
         st.info(tr(lang, "optical_note"))
     with tabs[1]:
         st.markdown(f"**{tr(lang, 'video_section_optical')}**")
-        speed_opt = st.slider(tr(lang, "anim_speed"), 80, 420, 240, 10, key="speed_opt")
+        speed_opt = st.slider(tr(lang, "anim_speed"), 100, 520, 280, 10, key="speed_opt")
         st.caption(tr(lang, "anim_smoother"))
         st.caption(tr(lang, "play_note"))
         anim_fig = make_optical_animation(opt, lang, frame_duration_ms=speed_opt)
