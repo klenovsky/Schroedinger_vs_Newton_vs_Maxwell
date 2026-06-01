@@ -81,6 +81,8 @@ TXT: Dict[str, Dict[str, str]] = {
         "finite": "Finite well",
         "about": "App notes",
         "notes_text": "The numerics are vectorized, cached, and based on tridiagonal eigensolvers to keep the app responsive on GitHub + Streamlit Community Cloud.",
+        "how_to_title": "How to use the app",
+        "how_to_text": "1. Choose a section in the sidebar. 2. Set physical parameters with the sliders. 3. Open Static plots for stationary states and energies. 4. Use Snapshot for one selected time or propagation distance. 5. Use Animation and press Play below the graph to run the evolution. 6. Increase Animation speed (ms per frame) if you want a slower and clearer motion.",
         "theory_title": "Short theory overview",
         "theory_text": r"""
 We use the following equations throughout the app.
@@ -205,6 +207,8 @@ $$
         "finite": "Konečně hluboká jáma",
         "about": "Poznámky k aplikaci",
         "notes_text": "Numerika je vektorizovaná, cachovaná a postavená na tridiagonálních eigensolverech, aby aplikace běžela svižně i na GitHubu a Streamlit Community Cloud.",
+        "how_to_title": "Jak aplikaci používat",
+        "how_to_text": "1. V levém panelu vyber sekci. 2. Pomocí sliderů nastav fyzikální parametry. 3. Ve Statických grafech sleduj stacionární stavy a energie. 4. Ve Snímku zobraz jeden vybraný čas nebo propagační vzdálenost. 5. V Animaci spusť vývoj tlačítkem Play pod grafem. 6. Pro pomalejší a přehlednější pohyb zvyš hodnotu Rychlost animace (ms na snímek).",
         "theory_title": "Krátký teoretický přehled",
         "theory_text": r"""
 V celé aplikaci používáme tyto základní rovnice.
@@ -1176,14 +1180,22 @@ with st.sidebar:
     st.markdown("---")
     st.markdown(f"**{tr(lang, 'about')}**")
     st.caption(tr(lang, "notes_text"))
-    with st.expander(tr(lang, "expander_numerics")):
-        st.write(tr(lang, "numerics_text"))
 
 st.markdown(
     f"""
     <div class="hero">
         <h1 style="margin:0;">{tr(lang, 'app_title')}</h1>
         <div class="small-note">{tr(lang, 'app_subtitle')}</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    f"""
+    <div class="card">
+        <b>{tr(lang, 'how_to_title')}</b><br>
+        <span class="small-note">{tr(lang, 'how_to_text')}</span>
     </div>
     """,
     unsafe_allow_html=True,
@@ -1212,7 +1224,7 @@ elif section == tr(lang, "single"):
         sigma = st.slider(tr(lang, "packet_sigma"), 0.02, 0.18, 0.06, 0.01)
     with c3:
         k0 = st.slider(tr(lang, "packet_k0"), 2.0, 35.0, 24.0, 1.0)
-        t_factor = st.slider(tr(lang, "time_factor"), 0.20, 2.20, 1.10, 0.05)
+        t_factor = st.slider(tr(lang, "time_factor"), 0.20, 2.20, 1.10, 0.01)
         n_basis = st.slider(tr(lang, "basis_count"), 40, min(180, N), min(120, N), 10)
 
     static_data = compute_single_well(L=L, N=N, n_show=n_show)
