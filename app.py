@@ -549,7 +549,7 @@ def compute_barrier_scan(widths: np.ndarray, V0: float = 80.0, L2: float = 1.8, 
 
 @st.cache_data(show_spinner=False)
 def compute_finite_well(well_width: float = 0.60, V_barrier: float = 120.0, L_f: float = 1.8,
-                        N_f: int = 360, n_eigs: int = 20):
+                        N_f: int = 360, n_eigs: int | None = None):
     x = np.linspace(L_f / (N_f + 1), L_f - L_f / (N_f + 1), N_f)
     center = L_f / 2.0
     V = np.full_like(x, V_barrier)
@@ -557,13 +557,14 @@ def compute_finite_well(well_width: float = 0.60, V_barrier: float = 120.0, L_f:
     V[inside] = 0.0
 
     diag, off, dx = build_tridiagonal(x, V)
+    # Solve the full tridiagonal problem so that all numerically resolved bound states are available.
     E, psi = solve_tridiagonal(diag, off, n_eigs=n_eigs)
     psi = normalize_columns(psi.astype(complex), dx)
     bound_idx = np.where(E < V_barrier)[0]
 
-    n_plot = min(3, len(bound_idx))
-    n_inf = np.arange(1, n_plot + 1)
-    E_inf = (np.pi**2 / (2.0 * well_width**2)) * n_inf**2 if n_plot > 0 else np.array([])
+    n_bound = len(bound_idx)
+    n_inf = np.arange(1, n_bound + 1)
+    E_inf = (np.pi**2 / (2.0 * well_width**2)) * n_inf**2 if n_bound > 0 else np.array([])
     return {"x": x, "dx": dx, "V": V, "E": E, "psi": psi, "bound_idx": bound_idx, "E_inf": E_inf}
 
 
@@ -781,31 +782,36 @@ def plot_barrier_scan(widths: np.ndarray, E0: np.ndarray, E1: np.ndarray, dE: np
 
 def plot_finite_well(fw, lang: str):
     x, V, E, psi, bound_idx, E_inf = fw["x"], fw["V"], fw["E"], fw["psi"], fw["bound_idx"], fw["E_inf"]
-    n_plot = min(3, len(bound_idx))
+    n_plot = len(bound_idx)
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.5))
     fig.patch.set_facecolor(FIG_FACE)
 
     ax = axes[0]
     ax.plot(x, V, lw=2.2, label="V(x)")
-    for j in range(n_plot):
-        idx = bound_idx[j]
-        ax.plot(x, 0.22 * np.real(psi[:, idx]) + E[idx], lw=2.0, label=f"{j+1}")
-        ax.axhline(E[idx], lw=0.8, alpha=0.25)
+    if n_plot > 0:
+        energy_span = max(E[bound_idx[-1]] - E[bound_idx[0]], 1e-9)
+        state_scale = max(0.12 * energy_span, 0.12)
+        cmap = plt.get_cmap("tab10", max(n_plot, 1))
+        for j, idx in enumerate(bound_idx):
+            ax.plot(x, state_scale * np.real(psi[:, idx]) + E[idx], lw=1.8, color=cmap(j), label=f"n={j+1}")
+            ax.axhline(E[idx], lw=0.8, alpha=0.25, color=cmap(j))
     ax.set_xlabel("x")
     ax.set_ylabel("energy / state shape" if lang == "English" else "energie / tvar stavu")
     ax.set_title(tr(lang, "finite_title"))
     ax.grid(True, alpha=0.22)
-    ax.legend(title="bound" if lang == "English" else "vázané")
+    if n_plot > 0:
+        ax.legend(title="bound" if lang == "English" else "vázané", fontsize=8, ncol=2)
 
     ax = axes[1]
     if n_plot > 0:
         idx = np.arange(1, n_plot + 1)
-        ax.plot(idx, E[bound_idx[:n_plot]], "o-", lw=2.2, label="finite" if lang == "English" else "konečná")
-        ax.plot(idx, E_inf[:n_plot], "s--", lw=2.0, label="infinite" if lang == "English" else "nekonečná")
+        ax.plot(idx, E[bound_idx], "o-", lw=2.2, label="finite" if lang == "English" else "konečná")
+        ax.plot(idx, E_inf, "s--", lw=2.0, label="infinite" if lang == "English" else "nekonečná")
     ax.set_xlabel("state index" if lang == "English" else "číslo stavu")
     ax.set_ylabel("energy" if lang == "English" else "energie")
     ax.grid(True, alpha=0.22)
-    ax.legend()
+    if n_plot > 0:
+        ax.legend()
     fig.tight_layout()
     return fig
 
