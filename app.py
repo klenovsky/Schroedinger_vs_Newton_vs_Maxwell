@@ -70,22 +70,25 @@ st.markdown(
 
 TXT: Dict[str, Dict[str, str]] = {
     "English": {
-        "app_title": "Quantum, classical, and optical dynamics in wells",
-        "app_subtitle": "Interactive teaching app derived from the classroom notebook. English is the default language; Czech can be selected from the sidebar.",
+        "app_title": "Quantum wells: from bouncing particles to tunnelling and revivals",
+        "app_subtitle": "A compact teaching app for first university courses in physics: compare classical motion, quantum wave packets, tunnelling, revivals, and an optical analogue.",
         "language": "Language",
-        "section": "Section",
+        "section": "Simulation",
         "theory": "Theory",
-        "single": "Single infinite well",
-        "double": "Double well and tunnelling",
+        "single": "Single well: states, motion, revival",
+        "double": "Double well: barrier, tunnelling, optical analogue",
         "optical": "Optical analogy",
-        "finite": "Finite well",
+        "finite": "Finite well: bound states and tails",
         "about": "App notes",
         "notes_text": "The numerics are vectorized, cached, and based on tridiagonal eigensolvers to keep the app responsive on GitHub + Streamlit Community Cloud.",
+        "hook_title": "What you can discover here",
+        "hook_text": "• Why quantum states in a well are discrete.  • Why a wave packet does not behave like a point particle.  • How a barrier controls tunnelling.  • Why light in coupled waveguides can mimic quantum dynamics.",
+        "open_theory": "Open short theory and references",
         "how_to_title": "How to use the app",
-        "how_to_text": "1. Choose a section in the sidebar. 2. Set physical parameters with the sliders. 3. Open Static plots for stationary states and energies. 4. Use Snapshot for one selected time or propagation distance. 5. Use Animation and press Play below the graph to run the evolution. 6. Increase Animation speed (ms per frame) if you want a slower and clearer motion.",
+        "how_to_text": "1. Choose one simulation in the sidebar. 2. Adjust only a few sliders first. 3. Start with Static plots to understand the stationary states. 4. Then use Snapshot for one chosen time or propagation distance. 5. Finally press Play in Animation to see the full evolution. 6. If the motion is too fast, increase Animation speed (ms per frame).",
         "theory_title": "Short theory overview",
         "theory_text": r"""
-We use the following equations throughout the app.
+This app uses intentionally simple one-dimensional models, but the central ideas are the same as in many real quantum and optical systems.
 
 Stationary Schrödinger equation:
 $$
@@ -93,27 +96,30 @@ $$
 \qquad
 \hat H=-\frac{1}{2}\frac{d^2}{dx^2}+V(x).
 $$
+The eigenfunctions $\psi_n$ describe the allowed stationary states and the eigenvalues $E_n$ their energies.
 
 Time-dependent quantum evolution:
 $$
 \psi(x,t)=\sum_n c_n\,\psi_n(x)\,e^{-iE_n t}.
 $$
+A localized wave packet is therefore a superposition of many stationary states. Because their phases evolve differently, the packet can move, spread, interfere, and later partially revive.
 
-In the classical picture, a particle moves between hard walls and reflects elastically.
+Classically, a particle is treated as a point moving between walls and reflecting elastically. This makes it easy to compare particle-like intuition with the genuine wave behaviour of quantum mechanics.
 
-For the optical analogy we use the paraxial envelope equation:
+For the optical analogue we use the paraxial envelope equation:
 $$
 i\frac{\partial A}{\partial z}
 =-\frac{1}{2k_0n_0}\frac{\partial^2A}{\partial x^2}+V_{\mathrm{opt}}(x)A,
 $$
-where $z$ plays the role of an evolution variable analogous to time $t$.
+where the propagation coordinate $z$ plays a role analogous to time $t$. In coupled waveguides, light can oscillate between two channels in close analogy with quantum tunnelling in a double well.
 
-In a double well or double waveguide, the splitting of the two lowest modes controls the oscillation period:
+In a double well or double waveguide, the splitting of the two lowest modes controls the oscillation scale:
 $$
 T_{\mathrm{tunnel}}\approx \frac{\pi}{E_1-E_0},
 \qquad
 L_c\approx \frac{\pi}{\beta_1-\beta_0}.
 $$
+So a higher and wider barrier usually means weaker coupling and slower transfer between the left and right side.
 """,
         "references": "Selected references",
         "refs_text": """
@@ -169,10 +175,10 @@ $$
         "classical_particle": "Classical particle",
         "quantum_density": "Quantum density",
         "optical_intensity": "Optical intensity",
-        "theory_card": "The app is intentionally didactic: simple 1D models, explicit equations, and visual comparison between classical, quantum, and optical pictures.",
+        "theory_card": "The app is intentionally didactic: a few clear models, only the most important equations, and direct visual comparison between classical, quantum, and optical pictures.",
         "revival_note": "The spreading of the packet after reflection is not decoherence. It is coherent dispersion and interference of different stationary components; for suitable times, revivals can appear.",
         "scan_note": r"A wider barrier reduces the splitting $\Delta E$, which makes the tunnelling oscillation slower.",
-        "footer": "Prepared for teaching use. The app structure is repository-ready for GitHub and Streamlit Community Cloud.",
+        "footer": "Prepared for teaching use. The app is structured for GitHub and Streamlit Community Cloud deployment.",
         "no_plotly": "Plotly is not available in this environment.",
         "video_section_single": "Animated wave-packet evolution",
         "video_section_double": "Animated classical / quantum / optical comparison",
@@ -192,22 +198,25 @@ $$
         "time_factor": "Maximum time in units of T_rev",
     },
     "Czech": {
-        "app_title": "Kvantová, klasická a optická dynamika v jamách",
-        "app_subtitle": "Interaktivní výuková aplikace odvozená z notebooku. Výchozí jazyk je angličtina; češtinu lze přepnout v levém panelu.",
+        "app_title": "Kvantové jámy: od odrazů částice k tunelování a revivalům",
+        "app_subtitle": "Stručná výuková aplikace pro první vysokoškolské kurzy fyziky: srovnání klasického pohybu, kvantových vlnových balíků, tunelování, revivalů a optického analogu.",
         "language": "Jazyk",
-        "section": "Sekce",
+        "section": "Simulace",
         "theory": "Teorie",
-        "single": "Jedna nekonečně hluboká jáma",
-        "double": "Dvojitá jáma a tunelování",
+        "single": "Jedna jáma: stavy, pohyb, revival",
+        "double": "Dvojitá jáma: bariéra, tunelování, optický analog",
         "optical": "Optická analogie",
-        "finite": "Konečně hluboká jáma",
+        "finite": "Konečná jáma: vázané stavy a ocasy",
         "about": "Poznámky k aplikaci",
         "notes_text": "Numerika je vektorizovaná, cachovaná a postavená na tridiagonálních eigensolverech, aby aplikace běžela svižně i na GitHubu a Streamlit Community Cloud.",
+        "hook_title": "Co zde lze objevovat",
+        "hook_text": "• Proč jsou stavy v jámě diskrétní.  • Proč se vlnový balík nechová jako bodová částice.  • Jak bariéra řídí tunelování.  • Proč může světlo ve spojených vlnovodech napodobovat kvantovou dynamiku.",
+        "open_theory": "Otevřít stručnou teorii a reference",
         "how_to_title": "Jak aplikaci používat",
-        "how_to_text": "1. V levém panelu vyber sekci. 2. Pomocí sliderů nastav fyzikální parametry. 3. Ve Statických grafech sleduj stacionární stavy a energie. 4. Ve Snímku zobraz jeden vybraný čas nebo propagační vzdálenost. 5. V Animaci spusť vývoj tlačítkem Play pod grafem. 6. Pro pomalejší a přehlednější pohyb zvyš hodnotu Rychlost animace (ms na snímek).",
+        "how_to_text": "1. V levém panelu vyber jednu simulaci. 2. Nejprve změň jen několik sliderů. 3. Začni Statickými grafy, kde uvidíš stacionární stavy. 4. Pak použij Snímek pro jeden vybraný čas nebo propagační vzdálenost. 5. Nakonec spusť Animaci tlačítkem Play pod grafem. 6. Pokud je pohyb příliš rychlý, zvyš Rychlost animace (ms na snímek).",
         "theory_title": "Krátký teoretický přehled",
         "theory_text": r"""
-V celé aplikaci používáme tyto základní rovnice.
+Aplikace používá záměrně jednoduché jednorozměrné modely, ale hlavní myšlenky jsou stejné jako v mnoha reálných kvantových a optických systémech.
 
 Stacionární Schrödingerova rovnice:
 $$
@@ -215,27 +224,30 @@ $$
 \qquad
 \hat H=-\frac{1}{2}\frac{d^2}{dx^2}+V(x).
 $$
+Vlastní funkce $\psi_n$ popisují dovolené stacionární stavy a vlastní hodnoty $E_n$ jejich energie.
 
 Časový vývoj kvantového stavu:
 $$
 \psi(x,t)=\sum_n c_n\,\psi_n(x)\,e^{-iE_n t}.
 $$
+Lokalizovaný vlnový balík je tedy superpozicí více stacionárních stavů. Proto se může pohybovat, rozšiřovat, interferovat a po vhodné době se i částečně znovu složit.
 
-V klasickém obrazu se částice pohybuje mezi tvrdými stěnami a na hranách se pružně odráží.
+V klasickém obrazu je částice bod, který se pohybuje mezi stěnami a na hranách se pružně odráží. To umožňuje dobře srovnat intuitivní částicový obraz se skutečným vlnovým chováním kvantové mechaniky.
 
 Pro optickou analogii používáme paraxiální rovnici pro obálku:
 $$
 i\frac{\partial A}{\partial z}
 =-\frac{1}{2k_0n_0}\frac{\partial^2A}{\partial x^2}+V_{\mathrm{opt}}(x)A,
 $$
-kde $z$ hraje roli evoluční proměnné analogické času $t$.
+kde souřadnice šíření $z$ hraje roli proměnné analogické času $t$. Ve spojených vlnovodech se tak světlo může přelévat mezi dvěma kanály podobně jako kvantová částice tuneluje mezi dvěma jamami.
 
-V dvojité jámě nebo dvojvlnovodu řídí periodu oscilace rozštěpení dvou nejnižších módů:
+V dvojité jámě nebo dvojvlnovodu řídí rozštěpení dvou nejnižších módů charakteristickou dobu oscilace:
 $$
 T_{\mathrm{tunnel}}\approx \frac{\pi}{E_1-E_0},
 \qquad
 L_c\approx \frac{\pi}{\beta_1-\beta_0}.
 $$
+Vyšší a širší bariéra tedy obvykle znamená slabší vazbu a pomalejší přenos mezi levou a pravou stranou.
 """,
         "references": "Vybrané reference",
         "refs_text": """
@@ -291,10 +303,10 @@ $$
         "classical_particle": "Klasická částice",
         "quantum_density": "Kvantová hustota",
         "optical_intensity": "Optická intenzita",
-        "theory_card": "Aplikace je záměrně didaktická: jednoduché 1D modely, explicitní rovnice a přímé srovnání klasického, kvantového a optického obrazu.",
+        "theory_card": "Aplikace je záměrně didaktická: několik jasných modelů, jen nejdůležitější rovnice a přímé vizuální srovnání klasického, kvantového a optického obrazu.",
         "revival_note": "Rozpad balíku po odrazu není dekoherence. Jde o koherentní disperzi a interferenci různých stacionárních složek; pro vhodné časy se mohou objevit revivaly.",
         "scan_note": r"Širší bariéra zmenšuje rozštěpení $\Delta E$, a tím zpomaluje tunelovací oscilaci.",
-        "footer": "Připraveno pro výukové použití. Struktura aplikace je připravená pro GitHub i Streamlit Community Cloud.",
+        "footer": "Připraveno pro výukové použití. Aplikace je strukturovaná pro nasazení přes GitHub a Streamlit Community Cloud.",
         "no_plotly": "V tomto prostředí není k dispozici Plotly.",
         "video_section_single": "Animovaný vývoj vlnového balíku",
         "video_section_double": "Animované srovnání klasiky / kvantového případu / optiky",
@@ -1167,7 +1179,7 @@ with st.sidebar:
     st.markdown("---")
     section = st.radio(
         tr(lang, "section"),
-        [tr(lang, "theory"), tr(lang, "single"), tr(lang, "double"), tr(lang, "optical"), tr(lang, "finite")],
+        [tr(lang, "single"), tr(lang, "double"), tr(lang, "finite")],
     )
     st.markdown("---")
     st.markdown(f"**{tr(lang, 'about')}**")
@@ -1186,6 +1198,16 @@ st.markdown(
 st.markdown(
     f"""
     <div class="card">
+        <b>{tr(lang, 'hook_title')}</b><br>
+        <span class="small-note">{tr(lang, 'hook_text')}</span>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    f"""
+    <div class="card">
         <b>{tr(lang, 'how_to_title')}</b><br>
         <span class="small-note">{tr(lang, 'how_to_text')}</span>
     </div>
@@ -1193,9 +1215,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-if section == tr(lang, "theory"):
+with st.expander(tr(lang, "open_theory"), expanded=False):
     st.markdown(f"<div class='card'>{tr(lang, 'theory_card')}</div>", unsafe_allow_html=True)
-    c1, c2 = st.columns([1.2, 1.0])
+    c1, c2 = st.columns([1.35, 1.0])
     with c1:
         st.subheader(tr(lang, "theory_title"))
         st.markdown(tr(lang, "theory_text"))
@@ -1203,7 +1225,7 @@ if section == tr(lang, "theory"):
         st.subheader(tr(lang, "references"))
         st.markdown(tr(lang, "refs_text"))
 
-elif section == tr(lang, "single"):
+if section == tr(lang, "single"):
     st.write(tr(lang, "single_intro"))
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -1296,46 +1318,6 @@ elif section == tr(lang, "double"):
             gif = make_double_compare_gif(dw, opt, lang)
             st.markdown(f'<img src="data:image/gif;base64,{__import__("base64").b64encode(gif).decode()}" width="100%" />', unsafe_allow_html=True)
             st.download_button(tr(lang, "download_video"), gif, file_name="double_well_compare.gif", mime="image/gif")
-elif section == tr(lang, "optical"):
-    st.write(tr(lang, "optical_intro"))
-    c1, c2 = st.columns(2)
-    with c1:
-        N2 = st.slider(tr(lang, "grid"), 160, 340, 260, 20, key="opt_grid")
-        dn_core = st.slider(tr(lang, "dn_core"), 0.004, 0.030, 0.012, 0.001, key="opt_dn")
-    with c2:
-        n_clad = st.slider(tr(lang, "n_clad"), 1.30, 1.60, 1.45, 0.01, key="opt_clad")
-        n_basis = st.slider(tr(lang, "basis_count"), 8, 40, 24, 2, key="opt_basis")
-
-    opt = compute_optical_analogy(dn_core=dn_core, n_clad=n_clad, N2=N2, n_basis=n_basis)
-    idx_o = st.slider(tr(lang, "snapshot"), 0, len(opt["z_vals"]) - 1, len(opt["z_vals"]) // 4, 1, key="opt_snap")
-    st.metric(r"$\Delta \beta = \beta_1-\beta_0$", f"{opt['d_beta']:.5f}")
-    st.metric(r"$L_c$", f"{opt['L_couple']:.5f}")
-
-    tabs = st.tabs([tr(lang, "tab_snapshot"), tr(lang, "tab_video")])
-    with tabs[0]:
-        fake_dw = {
-            "x": opt["x"], "dens": opt["I_opt"], "x_mean": opt["x_mean"],
-            "x_class": np.full_like(opt["x_mean"], np.nan), "times": opt["z_vals"],
-            "T_tunnel": opt["L_couple"], "P_left": opt["P_left"], "P_right": opt["P_right"],
-            "V": np.zeros_like(opt["x"]), "center": opt["center"], "barrier_width": 0.0,
-        }
-        st.pyplot(plot_double_snapshot(fake_dw, opt, idx_o, idx_o, lang), use_container_width=True)
-        st.info(tr(lang, "optical_note"))
-    with tabs[1]:
-        st.markdown(f"**{tr(lang, 'video_section_optical')}**")
-        speed_opt = st.slider(tr(lang, "anim_speed"), 100, 520, 280, 10, key="speed_opt")
-        st.caption(tr(lang, "anim_smoother"))
-        st.caption(tr(lang, "play_note"))
-        anim_fig = make_optical_animation(opt, lang, frame_duration_ms=speed_opt)
-        if anim_fig is not None:
-            st.plotly_chart(anim_fig, use_container_width=True)
-        else:
-            st.info(tr(lang, "no_plotly"))
-        st.caption(tr(lang, "gif_note"))
-        if st.button(tr(lang, "generate_video"), key="opt_gif"):
-            gif = make_optical_gif(opt, lang)
-            st.markdown(f'<img src="data:image/gif;base64,{__import__("base64").b64encode(gif).decode()}" width="100%" />', unsafe_allow_html=True)
-            st.download_button(tr(lang, "download_video"), gif, file_name="optical_propagation.gif", mime="image/gif")
 elif section == tr(lang, "finite"):
     st.write(tr(lang, "finite_intro"))
     c1, c2 = st.columns(2)
