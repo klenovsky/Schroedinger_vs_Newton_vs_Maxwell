@@ -240,6 +240,8 @@ So the app lets you compare one mathematical structure in two physical languages
         "revival_strength": "Revival strength max |<ψ(0)|ψ(t)>|²",
         "revival_time": "Revival time T_rev",
         "time_factor": "Maximum time in units of T_rev",
+        "reset_section": "Reset this section to defaults",
+        "reset_help": "Returns the main controls in this section to their initial teaching values.",
     },
     "Czech": {
         "app_title": "Kvantové jámy: od odrazů částice k tunelování a revivalům",
@@ -258,6 +260,8 @@ So the app lets you compare one mathematical structure in two physical languages
         "open_theory": "Otevřít stručnou teorii a reference",
         "how_to_title": "Jak aplikaci používat",
         "how_to_text": "1. V levém panelu vyber jednu simulaci. 2. Nejprve změň jen několik sliderů. 3. Před změnou parametrů otevři rozbalovací nápovědu nad daným panelem. 4. Začni Statickými grafy, kde uvidíš stacionární stavy a energetické škály. 5. Pak použij Snímek pro jeden vybraný čas nebo propagační vzdálenost. 6. Nakonec spusť Animaci tlačítkem Play pod grafem. 7. Pokud je pohyb příliš rychlý, zvyš Rychlost animace (ms na snímek).",
+        "reset_section": "Vrátit tuto sekci na výchozí hodnoty",
+        "reset_help": "Vrátí hlavní ovládací prvky v této sekci na výukové výchozí hodnoty.",
         "theory_title": "Krátký teoretický přehled",
         "theory_text": r"""
 Aplikace používá záměrně jednoduché jednorozměrné modely. Cílem není maximální realističnost v každém detailu, ale přehledné vizuální srovnání tří pohledů: klasické částice, kvantové vlnové funkce a optického analogu.
@@ -418,6 +422,42 @@ Aplikace tak umožňuje sledovat stejnou matematickou strukturu ve dvou různýc
 
 def tr(lang: str, key: str) -> str:
     return TXT[lang][key]
+
+
+SINGLE_DEFAULTS = {
+    "single_L": 1.0,
+    "single_N": 220,
+    "single_n_show": 10,
+    "single_state_n": 1,
+    "single_x0": 0.22,
+    "single_sigma": 0.06,
+    "single_k0": 24.0,
+    "single_t_factor": 1.10,
+    "single_n_basis": 120,
+    "speed_single": 240,
+}
+
+DOUBLE_DEFAULTS = {
+    "double_barrier_width": 0.12,
+    "double_V0": 80.0,
+    "double_N2": 260,
+    "dw_basis": 50,
+    "double_dn_core": 0.012,
+    "double_n_clad": 1.45,
+    "speed_double": 220,
+}
+
+FINITE_DEFAULTS = {
+    "finite_well_width": 0.60,
+    "finite_barrier": 120.0,
+    "finite_total_box": 1.8,
+    "finite_grid": 360,
+}
+
+
+def reset_defaults(defaults: Dict[str, float | int]) -> None:
+    for key, value in defaults.items():
+        st.session_state[key] = value
 
 
 # ============================================================
@@ -1315,19 +1355,22 @@ with st.expander(tr(lang, "open_theory"), expanded=False):
 
 if section == tr(lang, "single"):
     st.write(tr(lang, "single_intro"))
+    if st.button(tr(lang, "reset_section"), key="reset_single", help=tr(lang, "reset_help")):
+        reset_defaults(SINGLE_DEFAULTS)
+        st.rerun()
     c1, c2, c3 = st.columns(3)
     with c1:
-        L = st.slider(tr(lang, "well_width"), 0.6, 2.0, 1.0, 0.05)
-        N = st.slider(tr(lang, "grid"), 140, 320, 220, 20)
-        n_show = st.slider(tr(lang, "show_states"), 4, min(24, N), min(10, N), 1)
+        L = st.slider(tr(lang, "well_width"), 0.6, 2.0, 1.0, 0.05, key="single_L")
+        N = st.slider(tr(lang, "grid"), 140, 320, 220, 20, key="single_N")
+        n_show = st.slider(tr(lang, "show_states"), 4, min(24, N), min(10, N), 1, key="single_n_show")
     with c2:
-        state_n = st.slider(tr(lang, "chosen_state"), 1, min(180, N), 1, 1)
-        x0 = st.slider(tr(lang, "packet_center"), 0.05, float(L - 0.05), min(0.22, float(L - 0.08)), 0.01)
-        sigma = st.slider(tr(lang, "packet_sigma"), 0.02, 0.18, 0.06, 0.01)
+        state_n = st.slider(tr(lang, "chosen_state"), 1, min(180, N), 1, 1, key="single_state_n")
+        x0 = st.slider(tr(lang, "packet_center"), 0.05, float(L - 0.05), min(0.22, float(L - 0.08)), 0.01, key="single_x0")
+        sigma = st.slider(tr(lang, "packet_sigma"), 0.02, 0.18, 0.06, 0.01, key="single_sigma")
     with c3:
-        k0 = st.slider(tr(lang, "packet_k0"), 2.0, 35.0, 24.0, 1.0)
-        t_factor = st.slider(tr(lang, "time_factor"), 0.20, 2.20, 1.10, 0.01)
-        n_basis = st.slider(tr(lang, "basis_count"), 40, min(180, N), min(120, N), 10)
+        k0 = st.slider(tr(lang, "packet_k0"), 2.0, 35.0, 24.0, 1.0, key="single_k0")
+        t_factor = st.slider(tr(lang, "time_factor"), 0.20, 2.20, 1.10, 0.01, key="single_t_factor")
+        n_basis = st.slider(tr(lang, "basis_count"), 40, min(180, N), min(120, N), 10, key="single_n_basis")
 
     static_data = compute_single_well(L=L, N=N, n_show=n_show)
     sim = compute_single_dynamics(L=L, N=N, x0=x0, sigma=sigma, k0=k0, n_basis=n_basis, t_factor=t_factor)
@@ -1367,16 +1410,19 @@ if section == tr(lang, "single"):
             st.download_button(tr(lang, "download_video"), gif, file_name="single_well_wavepacket.gif", mime="image/gif")
 elif section == tr(lang, "double"):
     st.write(tr(lang, "double_intro"))
+    if st.button(tr(lang, "reset_section"), key="reset_double", help=tr(lang, "reset_help")):
+        reset_defaults(DOUBLE_DEFAULTS)
+        st.rerun()
     c1, c2, c3 = st.columns(3)
     with c1:
-        barrier_width = st.slider(tr(lang, "barrier_width"), 0.04, 0.30, 0.12, 0.01)
-        V0 = st.slider(tr(lang, "barrier_height"), 20.0, 140.0, 80.0, 5.0)
+        barrier_width = st.slider(tr(lang, "barrier_width"), 0.04, 0.30, 0.12, 0.01, key="double_barrier_width")
+        V0 = st.slider(tr(lang, "barrier_height"), 20.0, 140.0, 80.0, 5.0, key="double_V0")
     with c2:
-        N2 = st.slider(tr(lang, "grid"), 160, 340, 260, 20)
+        N2 = st.slider(tr(lang, "grid"), 160, 340, 260, 20, key="double_N2")
         n_basis = st.slider(tr(lang, "basis_count"), 10, 80, 50, 5, key="dw_basis")
     with c3:
-        dn_core = st.slider(tr(lang, "dn_core"), 0.004, 0.030, 0.012, 0.001)
-        n_clad = st.slider(tr(lang, "n_clad"), 1.30, 1.60, 1.45, 0.01)
+        dn_core = st.slider(tr(lang, "dn_core"), 0.004, 0.030, 0.012, 0.001, key="double_dn_core")
+        n_clad = st.slider(tr(lang, "n_clad"), 1.30, 1.60, 1.45, 0.01, key="double_n_clad")
 
     dw = compute_double_well(barrier_width=barrier_width, V0=V0, N2=N2, n_basis=n_basis)
     opt = compute_optical_analogy(dn_core=dn_core, n_clad=n_clad, N2=N2)
@@ -1420,12 +1466,15 @@ elif section == tr(lang, "double"):
             st.download_button(tr(lang, "download_video"), gif, file_name="double_well_compare.gif", mime="image/gif")
 elif section == tr(lang, "finite"):
     st.write(tr(lang, "finite_intro"))
+    if st.button(tr(lang, "reset_section"), key="reset_finite", help=tr(lang, "reset_help")):
+        reset_defaults(FINITE_DEFAULTS)
+        st.rerun()
     c1, c2 = st.columns(2)
     with c1:
-        well_width = st.slider(tr(lang, "well_width"), 0.30, 1.00, 0.60, 0.02)
+        well_width = st.slider(tr(lang, "well_width"), 0.30, 1.00, 0.60, 0.02, key="finite_well_width")
         V_barrier = st.slider(tr(lang, "barrier_height"), 20.0, 180.0, 120.0, 5.0, key="finite_barrier")
     with c2:
-        L_f = st.slider(tr(lang, "total_box"), 1.0, 2.5, 1.8, 0.1)
+        L_f = st.slider(tr(lang, "total_box"), 1.0, 2.5, 1.8, 0.1, key="finite_total_box")
         N_f = st.slider(tr(lang, "grid"), 180, 460, 360, 20, key="finite_grid")
 
     fw = compute_finite_well(well_width=well_width, V_barrier=V_barrier, L_f=L_f, N_f=N_f)
