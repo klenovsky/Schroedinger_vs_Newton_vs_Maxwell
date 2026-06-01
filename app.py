@@ -184,6 +184,8 @@ $$
         "numerics_text": "The Hamiltonians are tridiagonal and diagonalized with `scipy.linalg.eigh_tridiagonal`; time evolution is evaluated in a vectorized basis-expansion form `basis @ phases`.",
         "play_note": "Use the Play button below the plot to start the evolution.",
         "gif_note": "Optional: you can also export the same evolution as a GIF.",
+        "anim_speed": "Animation speed (ms per frame)",
+        "anim_smoother": "Slower values make the motion easier to follow and reduce visual flicker.",
     },
     "Czech": {
         "app_title": "Kvantová, klasická a optická dynamika v jamách",
@@ -300,6 +302,8 @@ $$
         "numerics_text": "Hamiltoniány jsou tridiagonální a diagonalizují se pomocí `scipy.linalg.eigh_tridiagonal`; časový vývoj je vyhodnocen vektorizovaně ve tvaru `basis @ phases`.",
         "play_note": "Pro spuštění vývoje použij tlačítko Play pod grafem.",
         "gif_note": "Volitelně lze stejný vývoj exportovat i jako GIF.",
+        "anim_speed": "Rychlost animace (ms na snímek)",
+        "anim_smoother": "Vyšší hodnota animaci zpomalí a omezí vizuální blikání.",
     },
 }
 
@@ -792,7 +796,7 @@ def make_surface(x: np.ndarray, y: np.ndarray, Z: np.ndarray, title: str, y_labe
     return fig
 
 
-def _animation_controls(frame_duration_ms: int = 80):
+def _animation_controls(frame_duration_ms: int = 180, redraw: bool = False):
     return [
         {
             "type": "buttons",
@@ -804,7 +808,7 @@ def _animation_controls(frame_duration_ms: int = 80):
                 {
                     "label": "Play",
                     "method": "animate",
-                    "args": [None, {"frame": {"duration": frame_duration_ms, "redraw": True}, "fromcurrent": True, "transition": {"duration": 0}}],
+                    "args": [None, {"frame": {"duration": frame_duration_ms, "redraw": redraw}, "fromcurrent": True, "transition": {"duration": 0}}],
                 },
                 {
                     "label": "Pause",
@@ -824,7 +828,7 @@ def _animation_slider(steps):
     }]
 
 
-def make_single_animation(sim, lang: str):
+def make_single_animation(sim, lang: str, frame_duration_ms: int = 180):
     if not HAS_PLOTLY:
         return None
     x = sim["x"]
@@ -832,7 +836,7 @@ def make_single_animation(sim, lang: str):
     x_mean = sim["x_mean"]
     x_class = sim["x_class"]
     times = sim["times"]
-    step = max(1, len(times) // 80)
+    step = max(1, len(times) // 55)
     idxs = np.arange(0, len(times), step, dtype=int)
     ymax = float(1.05 * np.max(dens))
     ymin_h = float(min(np.min(x_mean), np.min(x_class)) - 0.05)
@@ -868,7 +872,7 @@ def make_single_animation(sim, lang: str):
         slider_steps.append({
             "label": f"{times[i]:.3f}",
             "method": "animate",
-            "args": [[str(i)], {"frame": {"duration": 0, "redraw": True}, "mode": "immediate", "transition": {"duration": 0}}],
+            "args": [[str(i)], {"frame": {"duration": 0, "redraw": False}, "mode": "immediate", "transition": {"duration": 0}}],
         })
 
     fig.frames = frames
@@ -876,14 +880,14 @@ def make_single_animation(sim, lang: str):
     fig.update_yaxes(title_text="density" if lang == "English" else "hustota", range=[0, ymax], row=1, col=1)
     fig.update_xaxes(title_text="time t" if lang == "English" else "čas t", row=1, col=2)
     fig.update_yaxes(title_text="position" if lang == "English" else "poloha", range=[ymin_h, ymax_h], row=1, col=2)
-    fig.update_layout(height=500, title_text=f"{tr(lang, 'video_section_single')} — t = {times[idxs[0]]:.4f}", updatemenus=_animation_controls(), sliders=_animation_slider(slider_steps))
+    fig.update_layout(height=500, title_text=f"{tr(lang, 'video_section_single')} — t = {times[idxs[0]]:.4f}", updatemenus=_animation_controls(frame_duration_ms=frame_duration_ms, redraw=False), sliders=_animation_slider(slider_steps))
     return fig
 
 
-def make_double_animation(dw, opt, lang: str):
+def make_double_animation(dw, opt, lang: str, frame_duration_ms: int = 220):
     if not HAS_PLOTLY:
         return None
-    q_step = max(1, len(dw["times"]) // 80)
+    q_step = max(1, len(dw["times"]) // 50)
     q_idx = np.arange(0, len(dw["times"]), q_step, dtype=int)
     o_idx = np.linspace(0, len(opt["z_vals"]) - 1, len(q_idx)).astype(int)
 
@@ -920,7 +924,7 @@ def make_double_animation(dw, opt, lang: str):
         slider_steps.append({
             "label": f"{dw['times'][iq] / dw['T_tunnel']:.2f}",
             "method": "animate",
-            "args": [[str(iq)], {"frame": {"duration": 0, "redraw": True}, "mode": "immediate", "transition": {"duration": 0}}],
+            "args": [[str(iq)], {"frame": {"duration": 0, "redraw": False}, "mode": "immediate", "transition": {"duration": 0}}],
         })
 
     fig.frames = frames
@@ -932,14 +936,14 @@ def make_double_animation(dw, opt, lang: str):
     fig.update_yaxes(title_text="density" if lang == "English" else "hustota", range=[0, qmax], row=1, col=2)
     fig.update_xaxes(title_text="x", row=1, col=3)
     fig.update_yaxes(title_text="intensity" if lang == "English" else "intenzita", range=[0, omax], row=1, col=3)
-    fig.update_layout(height=460, title_text=f"{tr(lang, 'video_section_double')} — t/T = {dw['times'][q_idx[0]] / dw['T_tunnel']:.2f}, z/Lc = {opt['z_vals'][o_idx[0]] / opt['L_couple']:.2f}", updatemenus=_animation_controls(), sliders=_animation_slider(slider_steps), showlegend=False)
+    fig.update_layout(height=460, title_text=f"{tr(lang, 'video_section_double')} — t/T = {dw['times'][q_idx[0]] / dw['T_tunnel']:.2f}, z/Lc = {opt['z_vals'][o_idx[0]] / opt['L_couple']:.2f}", updatemenus=_animation_controls(frame_duration_ms=frame_duration_ms, redraw=False), sliders=_animation_slider(slider_steps), showlegend=False)
     return fig
 
 
-def make_optical_animation(opt, lang: str):
+def make_optical_animation(opt, lang: str, frame_duration_ms: int = 220):
     if not HAS_PLOTLY:
         return None
-    idxs = np.arange(0, len(opt["z_vals"]), max(1, len(opt["z_vals"]) // 80), dtype=int)
+    idxs = np.arange(0, len(opt["z_vals"]), max(1, len(opt["z_vals"]) // 55), dtype=int)
     omax = float(1.05 * np.max(opt["I_opt"]))
     z_norm = opt["z_vals"] / opt["L_couple"]
 
@@ -947,8 +951,8 @@ def make_optical_animation(opt, lang: str):
     fig.add_trace(go.Scatter(x=opt["x"], y=opt["I_opt"][:, idxs[0]], mode="lines", name=tr(lang, "optical_intensity"), line=dict(width=3)), row=1, col=1)
     fig.add_trace(go.Scatter(x=opt["x"], y=120 * (opt["n_profile"] - opt["n_clad"]), mode="lines", name="index", line=dict(dash="dash")), row=1, col=1)
     fig.add_trace(go.Scatter(x=[opt["x_mean"][idxs[0]], opt["x_mean"][idxs[0]]], y=[0, omax], mode="lines", name=tr(lang, "mean_position"), line=dict(dash="dot")), row=1, col=1)
-    fig.add_trace(go.Heatmap(z=opt["I_opt"], x=z_norm, y=opt["x"], colorscale="Viridis", showscale=True, colorbar=dict(title="I")), row=1, col=2)
-    fig.add_trace(go.Scatter(x=[z_norm[idxs[0]], z_norm[idxs[0]]], y=[opt["x"][0], opt["x"][-1]], mode="lines", name="cursor", line=dict(color="white", dash="dot")), row=1, col=2)
+    fig.add_trace(go.Heatmap(z=opt["I_opt"], x=z_norm, y=opt["x"], colorscale="Viridis", showscale=True, colorbar=dict(title="I"), zsmooth="best"), row=1, col=2)
+    fig.add_trace(go.Scatter(x=[z_norm[idxs[0]], z_norm[idxs[0]]], y=[opt["x"][0], opt["x"][-1]], mode="lines", name="cursor", line=dict(color="white", dash="dot", width=3)), row=1, col=2)
 
     frames = []
     slider_steps = []
@@ -957,18 +961,16 @@ def make_optical_animation(opt, lang: str):
             name=str(i),
             data=[
                 go.Scatter(x=opt["x"], y=opt["I_opt"][:, i]),
-                go.Scatter(x=opt["x"], y=120 * (opt["n_profile"] - opt["n_clad"])),
                 go.Scatter(x=[opt["x_mean"][i], opt["x_mean"][i]], y=[0, omax]),
-                go.Heatmap(z=opt["I_opt"], x=z_norm, y=opt["x"], colorscale="Viridis", showscale=True, colorbar=dict(title="I")),
                 go.Scatter(x=[z_norm[i], z_norm[i]], y=[opt["x"][0], opt["x"][-1]]),
             ],
-            traces=[0, 1, 2, 3, 4],
+            traces=[0, 2, 4],
             layout=go.Layout(title_text=f"{tr(lang, 'video_section_optical')} — z/Lc = {z_norm[i]:.2f}"),
         ))
         slider_steps.append({
             "label": f"{z_norm[i]:.2f}",
             "method": "animate",
-            "args": [[str(i)], {"frame": {"duration": 0, "redraw": True}, "mode": "immediate", "transition": {"duration": 0}}],
+            "args": [[str(i)], {"frame": {"duration": 0, "redraw": False}, "mode": "immediate", "transition": {"duration": 0}}],
         })
 
     fig.frames = frames
@@ -976,7 +978,7 @@ def make_optical_animation(opt, lang: str):
     fig.update_yaxes(title_text="intensity" if lang == "English" else "intenzita", range=[0, omax], row=1, col=1)
     fig.update_xaxes(title_text=r"z / L$_c$", row=1, col=2)
     fig.update_yaxes(title_text="x", row=1, col=2)
-    fig.update_layout(height=500, title_text=f"{tr(lang, 'video_section_optical')} — z/Lc = {z_norm[idxs[0]]:.2f}", updatemenus=_animation_controls(), sliders=_animation_slider(slider_steps), showlegend=False)
+    fig.update_layout(height=500, title_text=f"{tr(lang, 'video_section_optical')} — z/Lc = {z_norm[idxs[0]]:.2f}", updatemenus=_animation_controls(frame_duration_ms=frame_duration_ms, redraw=False), sliders=_animation_slider(slider_steps), showlegend=False)
     return fig
 
 
@@ -1182,8 +1184,10 @@ elif section == tr(lang, "single"):
         st.info(tr(lang, "revival_note"))
     with tabs[2]:
         st.markdown(f"**{tr(lang, 'video_section_single')}**")
+        speed_single = st.slider(tr(lang, "anim_speed"), 80, 420, 190, 10, key="speed_single")
+        st.caption(tr(lang, "anim_smoother"))
         st.caption(tr(lang, "play_note"))
-        anim_fig = make_single_animation(sim, lang)
+        anim_fig = make_single_animation(sim, lang, frame_duration_ms=speed_single)
         if anim_fig is not None:
             st.plotly_chart(anim_fig, use_container_width=True)
         else:
@@ -1234,8 +1238,10 @@ elif section == tr(lang, "double"):
         st.pyplot(plot_double_snapshot(dw, opt, idx_q, idx_o, lang), use_container_width=True)
     with tabs[2]:
         st.markdown(f"**{tr(lang, 'video_section_double')}**")
+        speed_double = st.slider(tr(lang, "anim_speed"), 80, 420, 220, 10, key="speed_double")
+        st.caption(tr(lang, "anim_smoother"))
         st.caption(tr(lang, "play_note"))
-        anim_fig = make_double_animation(dw, opt, lang)
+        anim_fig = make_double_animation(dw, opt, lang, frame_duration_ms=speed_double)
         if anim_fig is not None:
             st.plotly_chart(anim_fig, use_container_width=True)
         else:
@@ -1287,8 +1293,10 @@ elif section == tr(lang, "optical"):
         st.info(tr(lang, "optical_note"))
     with tabs[1]:
         st.markdown(f"**{tr(lang, 'video_section_optical')}**")
+        speed_opt = st.slider(tr(lang, "anim_speed"), 80, 420, 240, 10, key="speed_opt")
+        st.caption(tr(lang, "anim_smoother"))
         st.caption(tr(lang, "play_note"))
-        anim_fig = make_optical_animation(opt, lang)
+        anim_fig = make_optical_animation(opt, lang, frame_duration_ms=speed_opt)
         if anim_fig is not None:
             st.plotly_chart(anim_fig, use_container_width=True)
         else:

@@ -1,33 +1,18 @@
-# Quantum wells, tunnelling, and optical analogy — Streamlit app
+# Quantum Well Streamlit App
 
-A bilingual Streamlit teaching app for introductory university physics.
+Interactive educational Streamlit app comparing:
+- classical motion in a 1D box,
+- quantum wave-packet dynamics in single and double wells,
+- optical paraxial propagation as an analogue of tunnelling,
+- finite well bound states.
 
-Default language: **English**  
-Alternative language: **Czech**
+## New in this version
+- slower default animation playback,
+- in-app animation speed sliders,
+- reduced optical flicker by keeping the 2D intensity map static and animating only the cursor and 1D slice,
+- vectorized numerical core based on NumPy and `scipy.linalg.eigh_tridiagonal`.
 
-## Included topics
-
-- single infinite quantum well,
-- time evolution of a quantum wave packet and comparison with a classical particle,
-- double well and tunnelling,
-- optical analogy with two coupled waveguides,
-- finite well with evanescent tails,
-- optional animated GIFs for the dynamical sections,
-- optional 3D surfaces for the `x-t` and `x-z` evolution.
-
-## Repository structure
-
-```text
-.
-├── app.py
-├── requirements.txt
-├── README.md
-├── .gitignore
-└── .streamlit/
-    └── config.toml
-```
-
-## Local run
+## Run locally
 
 ```bash
 pip install -r requirements.txt
@@ -35,27 +20,4 @@ streamlit run app.py
 ```
 
 ## Deploy on Streamlit Community Cloud
-
-1. Create a new GitHub repository.
-2. Upload all files from this folder.
-3. Open Streamlit Community Cloud.
-4. Select the repository.
-5. Set **Main file path** to `app.py`.
-6. Deploy.
-
-## Notes
-
-- The app is written so that it can be uploaded to GitHub directly.
-- Numerics are cached and vectorized where possible.
-- Tridiagonal Hamiltonians are diagonalized efficiently with `scipy.linalg.eigh_tridiagonal`.
-- GIF animations are generated on demand and cached by Streamlit.
-
-## Česká poznámka
-
-Aplikace je připravena přímo pro GitHub a následné nasazení do Streamlit Community Cloud. Výchozí jazyk je angličtina, ale v levém panelu lze přepnout do češtiny.
-
-
-## Update in this version
-
-- real interactive Plotly animations with Play/Pause controls inside the app
-- GIF export kept as an optional fallback/download
+Push this repository to GitHub and choose `app.py` as the main file.
