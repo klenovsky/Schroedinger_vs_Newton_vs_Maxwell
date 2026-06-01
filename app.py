@@ -148,7 +148,6 @@ $$
         "tab_static": "Static plots",
         "tab_snapshot": "Snapshot",
         "tab_video": "Animation",
-        "tab_3d": "3D view",
         "single_states_title": "Single infinite well: first eigenstates",
         "single_prob_title": "Quantum vs classical probability density",
         "single_snapshot_title": "Time snapshot of the wave packet",
@@ -158,9 +157,6 @@ $$
         "double_scan_title": "Barrier controls the splitting and the tunnelling time",
         "optical_snapshot_title": "Optical intensity slice and I(x,z) map",
         "finite_title": "Finite well and bound states",
-        "surface_single": "3D surface: quantum evolution in x and t",
-        "surface_double": "3D surface: double-well quantum evolution",
-        "surface_optical": "3D surface: optical propagation in x and z",
         "bound_states": "Number of bound states",
         "interpretation": "Interpretation",
         "optical_note": "For a 1D slice $I(x)$ the propagation direction $z$ is perpendicular to the drawing plane; the 2D map makes this explicit.",
@@ -274,7 +270,6 @@ $$
         "tab_static": "Statické grafy",
         "tab_snapshot": "Snímek",
         "tab_video": "Animace",
-        "tab_3d": "3D pohled",
         "single_states_title": "Jedna nekonečně hluboká jáma: první stavy",
         "single_prob_title": "Kvantová vs. klasická pravděpodobnostní hustota",
         "single_snapshot_title": "Časový snímek vlnového balíku",
@@ -284,9 +279,6 @@ $$
         "double_scan_title": "Bariéra řídí rozštěpení i dobu tunelování",
         "optical_snapshot_title": "Řez optickou intenzitou a mapa I(x,z)",
         "finite_title": "Konečně hluboká jáma a vázané stavy",
-        "surface_single": "3D plocha: kvantový vývoj v osách x a t",
-        "surface_double": "3D plocha: kvantový vývoj v dvojité jámě",
-        "surface_optical": "3D plocha: optické šíření v osách x a z",
         "bound_states": "Počet vázaných stavů",
         "interpretation": "Interpretace",
         "optical_note": "U 1D řezu $I(x)$ je směr šíření $z$ kolmý k rovině obrázku; 2D mapa to ukazuje explicitně.",
@@ -1231,7 +1223,7 @@ elif section == tr(lang, "single"):
     sim = compute_single_dynamics(L=L, N=N, x0=x0, sigma=sigma, k0=k0, n_basis=n_basis, t_factor=t_factor)
     idx = st.slider(tr(lang, "snapshot"), 0, len(sim["times"]) - 1, len(sim["times"]) // 3, 1)
 
-    tabs = st.tabs([tr(lang, "tab_static"), tr(lang, "tab_snapshot"), tr(lang, "tab_video"), tr(lang, "tab_3d")])
+    tabs = st.tabs([tr(lang, "tab_static"), tr(lang, "tab_snapshot"), tr(lang, "tab_video")])
     with tabs[0]:
         st.pyplot(plot_single_stationary(static_data, L, n_show, lang), use_container_width=True)
         st.caption(tr(lang, "all_states_note"))
@@ -1257,13 +1249,6 @@ elif section == tr(lang, "single"):
             gif = make_single_gif(sim["x"], sim["dens"], sim["x_mean"], sim["x_class"], sim["times"], lang)
             st.markdown(f'<img src="data:image/gif;base64,{__import__("base64").b64encode(gif).decode()}" width="100%" />', unsafe_allow_html=True)
             st.download_button(tr(lang, "download_video"), gif, file_name="single_well_wavepacket.gif", mime="image/gif")
-    with tabs[3]:
-        fig3d = make_surface(sim["x"], sim["times"], sim["dens"], tr(lang, "surface_single"), "t", r"|psi|^2")
-        if fig3d is not None:
-            st.plotly_chart(fig3d, use_container_width=True)
-        else:
-            st.info(tr(lang, "no_plotly"))
-
 elif section == tr(lang, "double"):
     st.write(tr(lang, "double_intro"))
     c1, c2, c3 = st.columns(3)
@@ -1287,7 +1272,7 @@ elif section == tr(lang, "double"):
     m2.metric(r"$T_{tunnel}$", f"{dw['T_tunnel']:.5f}")
     m3.metric(r"$L_c$", f"{opt['L_couple']:.5f}")
 
-    tabs = st.tabs([tr(lang, "tab_static"), tr(lang, "tab_snapshot"), tr(lang, "tab_video"), tr(lang, "tab_3d")])
+    tabs = st.tabs([tr(lang, "tab_static"), tr(lang, "tab_snapshot"), tr(lang, "tab_video")])
     with tabs[0]:
         st.pyplot(plot_double_stationary(dw, lang), use_container_width=True)
         widths = np.linspace(0.04, 0.30, 12)
@@ -1311,21 +1296,6 @@ elif section == tr(lang, "double"):
             gif = make_double_compare_gif(dw, opt, lang)
             st.markdown(f'<img src="data:image/gif;base64,{__import__("base64").b64encode(gif).decode()}" width="100%" />', unsafe_allow_html=True)
             st.download_button(tr(lang, "download_video"), gif, file_name="double_well_compare.gif", mime="image/gif")
-    with tabs[3]:
-        colA, colB = st.columns(2)
-        with colA:
-            fig3d_q = make_surface(dw["x"], dw["times"] / dw["T_tunnel"], dw["dens"], tr(lang, "surface_double"), "t/T", r"|psi|^2")
-            if fig3d_q is not None:
-                st.plotly_chart(fig3d_q, use_container_width=True)
-            else:
-                st.info(tr(lang, "no_plotly"))
-        with colB:
-            fig3d_o = make_surface(opt["x"], opt["z_vals"] / opt["L_couple"], opt["I_opt"], tr(lang, "surface_optical"), "z/Lc", "I")
-            if fig3d_o is not None:
-                st.plotly_chart(fig3d_o, use_container_width=True)
-            else:
-                st.info(tr(lang, "no_plotly"))
-
 elif section == tr(lang, "optical"):
     st.write(tr(lang, "optical_intro"))
     c1, c2 = st.columns(2)
@@ -1341,7 +1311,7 @@ elif section == tr(lang, "optical"):
     st.metric(r"$\Delta \beta = \beta_1-\beta_0$", f"{opt['d_beta']:.5f}")
     st.metric(r"$L_c$", f"{opt['L_couple']:.5f}")
 
-    tabs = st.tabs([tr(lang, "tab_snapshot"), tr(lang, "tab_video"), tr(lang, "tab_3d")])
+    tabs = st.tabs([tr(lang, "tab_snapshot"), tr(lang, "tab_video")])
     with tabs[0]:
         fake_dw = {
             "x": opt["x"], "dens": opt["I_opt"], "x_mean": opt["x_mean"],
@@ -1366,13 +1336,6 @@ elif section == tr(lang, "optical"):
             gif = make_optical_gif(opt, lang)
             st.markdown(f'<img src="data:image/gif;base64,{__import__("base64").b64encode(gif).decode()}" width="100%" />', unsafe_allow_html=True)
             st.download_button(tr(lang, "download_video"), gif, file_name="optical_propagation.gif", mime="image/gif")
-    with tabs[2]:
-        fig3d = make_surface(opt["x"], opt["z_vals"] / opt["L_couple"], opt["I_opt"], tr(lang, "surface_optical"), "z/Lc", "I")
-        if fig3d is not None:
-            st.plotly_chart(fig3d, use_container_width=True)
-        else:
-            st.info(tr(lang, "no_plotly"))
-
 elif section == tr(lang, "finite"):
     st.write(tr(lang, "finite_intro"))
     c1, c2 = st.columns(2)
