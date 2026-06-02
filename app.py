@@ -1302,8 +1302,16 @@ def make_optical_gif(opt, lang):
 # UI
 # ============================================================
 
+if "app_lang" not in st.session_state:
+    st.session_state["app_lang"] = "English"
+
 with st.sidebar:
-    lang = st.selectbox("Language / Jazyk", ["English", "Czech"], index=0)
+    lang = st.selectbox(
+        "Language / Jazyk",
+        ["English", "Czech"],
+        index=["English", "Czech"].index(st.session_state["app_lang"]),
+        key="app_lang",
+    )
     st.markdown("---")
     section = st.radio(
         tr(lang, "section"),
